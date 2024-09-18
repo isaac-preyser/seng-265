@@ -1,0 +1,11 @@
+commit 0ad2f63626f0aab610896ffee94cfa0ea9970342
+Author: Isaac Preyser <preyser@uvic.ca>
+Date:   Mon Sep 16 15:58:57 2024 -0700
+
+    Added commit_log.txt to new Lab2 directory.
+
+commit 1dc850bd144ee498ccb1e8d337fedc77517572c3
+Author: Lynn Palmer <lpalmer@uvic.ca>
+Date:   Fri Sep 13 14:58:29 2024 -0700
+
+    initial
