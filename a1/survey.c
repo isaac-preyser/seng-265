@@ -25,11 +25,11 @@ int* getControlBits() {
         if (line[0] == '#'){
             continue; 
         }
-        token = strtok(line, ",");
+        token = strtok(line, ",\n");
         int i = 0;
         while (token != NULL && i < 4) {
             control_bits[i] = atoi(token);
-            token = strtok(NULL, ",");
+            token = strtok(NULL, ",\n");
             i++;
         }
         break; 
@@ -48,7 +48,7 @@ void getQuestions(char *arr[]) {
         if (line[0] == '#'){
             continue; 
         }
-        token = strtok(line, ";");
+        token = strtok(line, ";\n");
         int i = 0;
         while (token != NULL) {
             //malloc space for the question (epic casts for the win)
@@ -56,7 +56,7 @@ void getQuestions(char *arr[]) {
             //copy the question into the array
             strncpy(arr[i], token, strlen(token));
             //get the next token
-            token = strtok(NULL, ";");
+            token = strtok(NULL, ";\n");
             i++;
         } 
         //make the rest of the questions array NULL
@@ -80,7 +80,7 @@ void getAnswerOptions(char* arr[]){
         if (line[0] == '#'){
             continue; 
         }
-        token = strtok(line, ";");
+        token = strtok(line, ";\n");
         int i = 0;
         while (token != NULL) {
             //malloc space for the question (epic casts for the win)
@@ -88,7 +88,7 @@ void getAnswerOptions(char* arr[]){
             //copy the question into the array
             strncpy(arr[i], token, strlen(token));
             //get the next token
-            token = strtok(NULL, ";");
+            token = strtok(NULL, ";\n");
             i++;
         } 
         //make the rest of the questions array NULL
@@ -110,7 +110,7 @@ void getLikertOptions(char* arr[]){
         if (line[0] == '#'){
             continue; 
         }
-        token = strtok(line, ",");
+        token = strtok(line, ",\n");
         int i = 0;
         while (token != NULL) {
             //malloc space for the question (epic casts for the win)
@@ -118,7 +118,7 @@ void getLikertOptions(char* arr[]){
             //copy the question into the array
             strncpy(arr[i], token, strlen(token));
             //get the next token
-            token = strtok(NULL, ",");
+            token = strtok(NULL, ",\n");
             i++;
         } 
         //make the rest of the questions array NULL
