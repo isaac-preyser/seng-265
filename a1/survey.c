@@ -32,40 +32,59 @@ int* getControlBits() {
     return control_bits;
 }
 
-char* getQuestions() {
-	//vscode and nano use different amount of whitespace for a tab. interesting...
-	static char* questions[200]; //200 questions max... should be enough, right?
-	char line[3000]; //hopefully 3000 characters is wide enough for one line. 
-	char *token; 
-	int line_number = 0; 
 
-	while(fgets(line, 3000, stdin) != (NULL)){
-		line_number++; //for debug purposes. 
-		//if the line starts with a #, skip it. 
-		if (line[0] == '#'){
-		continue;
-	}
-	//tokenize the questions. 
-	token = strtok(line, ";");
-	int i = 0; 
-	while (token != NULL){
-		//add the current token to the first avaliable space in the string array. 
-		strcpy(questions[i], token);
-		i++;
-	}
+void getQuestions(char *arr[]) {
+    char line[3000];
+    char *token;
+    int line_number = 0;
+
+    while(fgets(line, 3000, stdin) != (NULL)){
+        line_number++; //for debug purposes. 
+        //if the line starts with a #, skip it. 
+        if (line[0] == '#'){
+            continue; 
+        }
+        token = strtok(line, ";");
+        int i = 0;
+        while (token != NULL) {
+            //malloc space for the question
+            arr[i] = (char*)malloc(strlen(token) + 1);
+            //copy the question into the array
+            strcpy(arr[i], token);
+            //get the next token
+            token = strtok(NULL, ";");
+            i++;
+        } 
+        //make the rest of the questions array NULL
+        for (int j = i; j < 200; j++) {
+            arr[j] = NULL;
+        }
+
+        break; //we only want the first line of questions.
+    }
+    return;
 
 }
 
 
 int main() {
+    const int MAX_QUESTION_LENGTH = 3000;
+    char* questions[200];
 
     int* control_bits = getControlBits();
-    char* questions = getQuestions(); 
+    
+    getQuestions(questions); 
     // Print control bits for debugging
     printf("Control Bits: \n");
     for(int i = 0; i < 4; i++) {
         printf("  Bit %d: %d\n", i, control_bits[i]);
     }
-
+    // Print questions for debugging
+   for (int i = 0; i < 200; i++) {
+        if (questions[i] == NULL) {
+            break;
+        }
+        printf("Question %d: %s\n", i, questions[i]);
+    }
     return 0;
 }
