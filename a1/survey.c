@@ -12,6 +12,13 @@ const int MAX_QUESTION_AMOUNT = 200;
 const int MAX_ANSWER_AMOUNT = 50;
 const int MAX_LIKERT_AMOUNT = 10;
 
+typedef struct {
+    char* question; 
+    char question_type; //is it type C, I, G, U or P? (corresponds to question category - subtokenizing the question content will be necessary)
+    int question_number;
+    int is_reverse; //boolean - is the question reverse scored?
+}Question;
+
 
 int* getControlBits() {
     static int control_bits[4];
@@ -130,6 +137,18 @@ void getLikertOptions(char* arr[]){
     }
 }
 
+Question constructQuestion(char* question, char* answer_option){
+    Question q;
+    q.question_type = question[0];
+    q.question_number = atoi(&question[1]); //this is a hack lmao
+    q.question = malloc(strlen(question) + 1);
+    strncpy(q.question, &question[4], strlen(question) - 4); //we just want the question content. 
+    q.is_reverse = 0; //default to false.
+    if (answer_option[0] == 'R'){
+        q.is_reverse = 1;
+    }
+    return q;
+}
 
 int main() {
     char* questions[MAX_QUESTION_AMOUNT];
@@ -140,31 +159,53 @@ int main() {
     getQuestions(questions); 
     getAnswerOptions(answer_options);
     getLikertOptions(likert_options);
-    // Print control bits for debugging
-    printf("Control Bits: \n");
-    for(int i = 0; i < 4; i++) {
-        printf("  Bit %d: %d\n", i, control_bits[i]);
-    }
-    // Print questions for debugging
-   for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+//     // Print control bits for debugging
+//     printf("Control Bits: \n");
+//     for(int i = 0; i < 4; i++) {
+//         printf("  Bit %d: %d\n", i, control_bits[i]);
+//     }
+//     // Print questions for debugging
+//    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+//         if (questions[i] == NULL) {
+//             break;
+//         }
+//         printf("Question %d: %s\n", i, questions[i]);
+//     }
+//     // Print answer options for debugging
+//     for (int i = 0; i < MAX_ANSWER_AMOUNT; i++) {
+//         if (answer_options[i] == NULL) {
+//             break;
+//         }
+//         printf("Answer %d: %s\n", i, answer_options[i]);
+//     }
+//     // Print likert options for debugging
+//     for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+//         if (likert_options[i] == NULL) {
+//             break;
+//         }
+//         printf("Likert %d: %s\n", i, likert_options[i]);
+//     }
+
+    //construct the questions
+    Question q[MAX_QUESTION_AMOUNT];
+    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (questions[i] == NULL) {
             break;
         }
-        printf("Question %d: %s\n", i, questions[i]);
+        q[i] = constructQuestion(questions[i], answer_options[i]);
     }
-    // Print answer options for debugging
-    for (int i = 0; i < MAX_ANSWER_AMOUNT; i++) {
-        if (answer_options[i] == NULL) {
+
+    printf("Questions: \n");
+    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+        if (questions[i] == NULL) {
             break;
         }
-        printf("Answer %d: %s\n", i, answer_options[i]);
-    }
-    // Print likert options for debugging
-    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
-        if (likert_options[i] == NULL) {
-            break;
+        printf("Question %c%d: %s\n", q[i].question_type, q[i].question_number, q[i].question);
+        if (q[i].is_reverse) {
+            printf("  Reverse Scored\n");
         }
-        printf("Likert %d: %s\n", i, likert_options[i]);
     }
+
+
     return 0;
 }
