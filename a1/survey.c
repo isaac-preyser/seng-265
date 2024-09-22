@@ -11,7 +11,7 @@ Date:    9/18/2024
 #define MAX_LINE_LENGTH 3000
 #define MAX_QUESTION_AMOUNT 200
 #define MAX_ANSWER_AMOUNT 50
-#define MAX_LIKERT_AMOUNT 6
+#define MAX_LIKERT_AMOUNT 6 // 6 likert options. This leaves one extra space. Code is set up to reflect this. 
 
 typedef struct {
     char* question;
@@ -220,7 +220,7 @@ Response getNextResponse() {
 int reverseScore(const char* answer, char* likert_options[]) {
     for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
         if (strcmp(answer, likert_options[i]) == 0) {
-            return MAX_LIKERT_AMOUNT - 1 - i;
+            return MAX_LIKERT_AMOUNT - 1 - i; // return 5 - index of the likert option, e.g. 5 for "fully disagree", as it appears first. shifted by 1 to account for 0 indexing. (this should change since we have 6 options and therefore max_likert_amount **should** be 5)
         }
     }
     printf("Error: Invalid answer. Expected a valid Likert option, but received \"%s\"\n", answer);
@@ -231,7 +231,7 @@ int reverseScore(const char* answer, char* likert_options[]) {
 int forwardScore(const char* answer, char* likert_options[]) {
     for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
         if (strcmp(answer, likert_options[i]) == 0) {
-            return i;
+            return i; // return the index of the likert option, e.g. 0 for "fully disagree", as it appears first. 
         }
     }
     printf("Error: Invalid answer. Expected a valid Likert option, but received \"%s\"\n", answer);
@@ -308,37 +308,81 @@ void freeResponses(Response* responses, int response_count) {
 }
 
 float* calcPercents(Response responses[], Question q, int response_count, char* likert_options[]) {
-    // Array to store counts of each Likert option (6 options from Strongly Disagree to Strongly Agree)
-    int likert_counts[MAX_LIKERT_AMOUNT] = {0};
-    
-    // Loop through each response
-    for (int i = 0; i < response_count; i++) {
-        // Check if the response has the answer to this question
-        if (responses[i].answer[q.question_number - 1] != NULL) {
-            // Get the answer for this question
-            char* answer = responses[i].answer[q.question_number - 1];
-            
-            // Compare the answer with Likert options and increment the corresponding count
-            for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
-                if (strcmp(answer, likert_options[j]) == 0) {
-                    likert_counts[j]++;
-                    break;
-                }
+    float* percentages = malloc(MAX_LIKERT_AMOUNT * sizeof(float));
+    int likert_counts[MAX_LIKERT_AMOUNT] = {0}; //stores the amount of times a given likert option was selected. In this case, 0 will always be fully disagree, and 4 will always be fully agree.
+    if (percentages == NULL) {
+        fprintf(stderr, "Memory allocation failed (calcPercents)\n");
+        exit(1);
+    } 
+
+    // Initialize all percentages to 0
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+        percentages[i] = 0;
+    }
+    // reverse lookup for each respondents' answer to question q. 
+    for (int i = 0; i < response_count; i++){
+        if(responses[i].major == NULL){
+            break; // no more responses. 
+        }
+        if (q.is_reverse){
+            //if we have reverse scoring, 5 corresponds with fully disagree, 0 corresponds with fully agree.
+            switch(q.question_type){
+            case 'C':
+                likert_counts[5 - responses[i].c_scores[q.question_number - 1]]++;
+                break;
+            case 'I':
+                likert_counts[5 - responses[i].i_scores[q.question_number - 1]]++;
+                break;
+            case 'G':
+                likert_counts[5 - responses[i].g_scores[q.question_number - 1]]++;
+                break;
+            case 'U':
+                likert_counts[5 - responses[i].u_scores[q.question_number - 1]]++;
+                break;
+            case 'P':
+                likert_counts[5 - responses[i].p_scores[q.question_number - 1]]++;
+                break;
+            default:
+                printf("Error: Invalid question type '%c' for question number %d. Exiting.\n", q.question_type, q.question_number);
+                exit(1);
             }
+        } else{
+            switch(q.question_type){
+            case 'C':
+                likert_counts[responses[i].c_scores[q.question_number - 1]]++;
+                break; 
+            case 'I':
+                likert_counts[responses[i].i_scores[q.question_number - 1]]++;
+                break;
+            case 'G':
+                likert_counts[responses[i].g_scores[q.question_number - 1]]++;
+                break;
+            case 'U':
+                likert_counts[responses[i].u_scores[q.question_number - 1]]++;
+                break;
+            case 'P':
+                likert_counts[responses[i].p_scores[q.question_number - 1]]++;
+                break;
+            default:
+                printf("Error: Invalid question type '%c' for question number %d. Exiting.\n", q.question_type, q.question_number);
+                exit(1);
+            
+        }
         }
     }
-    
-    // Array to store the percentages
-    float* percentages = malloc(MAX_LIKERT_AMOUNT * sizeof(float));
-    if (percentages == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
+    //now we should have a count of how many times each likert option was selected. 
+    int total_responses = 0; 
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++){
+        total_responses += likert_counts[i];
     }
-    
-    // Calculate the percentage for each Likert option
-    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
-        percentages[i] = ((float)likert_counts[i] / response_count) * 100;
+
+    //now we can calculate the percentages.
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++){
+        percentages[i] = (float)likert_counts[i] / total_responses * 100;
     }
+
+    //remember to free percentages after using it.
+    
 
     return percentages;
 }
@@ -356,11 +400,11 @@ void outputPercentiles(Question questions[], Response responses[], int response_
         }
         float* percents = calcPercents(responses, questions[i], response_count, likert_options);
         printf("%c%d: %s\n", questions[i].question_type, questions[i].question_number, questions[i].question);
-        printf("Strongly Disagree: %.2f\n", percents[0]);
-        printf("Disagree: %.2f\n", percents[1]);
-        printf("Neutral: %.2f\n", percents[2]);
-        printf("Agree: %.2f\n", percents[3]);
-        printf("Strongly Agree: %.2f\n\n", percents[4]);
+        for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
+            printf("%.2f: %s\n", percents[j], likert_options[j] );
+        }
+        printf("\n");
+        free(percents); // Free the allocated memory for percents (we don't need it anymore)
     }
 
     
@@ -373,6 +417,7 @@ void cleanup(char** questions, char** answer_options, char** likert_options, Res
     freeStringArray(answer_options, MAX_ANSWER_AMOUNT);
     freeStringArray(likert_options, MAX_LIKERT_AMOUNT);
     freeResponses(responses, response_count);
+    
 }
 
 int main() {
