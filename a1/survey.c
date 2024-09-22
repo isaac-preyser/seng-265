@@ -239,6 +239,27 @@ Response getNextResponse(Question* question_bank[]) {
     return r;
 }
 
+//calculation and output functions
+
+//maybe use a helper function to calculate the scores for each response.
+//direct
+//reverse
+
+void calculateScores(Response* responses, int response_count, char* likert_options[]) {
+    for (int i = 0; i < response_count; i++) {
+        for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
+            if (responses[i].answers[j] == NULL) {
+                break;
+            }
+            if (responses[i].answers[j]->corresponding_question->is_reverse) {
+                //use reverse scoring. 
+                
+            } else {
+                //use direct scoring.
+            }
+        }
+    }
+}
 
 //cleanup functions
 void freeStringArray(char** arr, int max_size) {
@@ -317,16 +338,19 @@ int main(){
             break;
         }
     }
-    // print out the responses for debug.
-    for (int i = 0; i < response_count; i++) {
-        printf("Response %d:\n", i + 1);
-        printf("\tMajor: %s\n", responses[i].major);
-        printf("\tYes/No: %s\n", responses[i].yes_no ? "yes" : "no");
-        printf("\tDate of Birth: %d-%d-%d\n", responses[i].dob[0], responses[i].dob[1], responses[i].dob[2]);
-        for (int j = 0; j < question_count; j++) {
-            printf("\tAnswer for %c%d: %s\n", responses[i].answers[j]->corresponding_question->question_type, responses[i].answers[j]->corresponding_question->question_number, responses[i].answers[j]->answer_content);
-        }
-    }
+    // // print out the responses for debug.
+    // for (int i = 0; i < response_count; i++) {
+    //     printf("Response %d:\n", i + 1);
+    //     printf("\tMajor: %s\n", responses[i].major);
+    //     printf("\tYes/No: %s\n", responses[i].yes_no ? "yes" : "no");
+    //     printf("\tDate of Birth: %d-%d-%d\n", responses[i].dob[0], responses[i].dob[1], responses[i].dob[2]);
+    //     for (int j = 0; j < question_count; j++) {
+    //         printf("\tAnswer for %c%d: %s\n", responses[i].answers[j]->corresponding_question->question_type, responses[i].answers[j]->corresponding_question->question_number, responses[i].answers[j]->answer_content);
+    //     }
+    // }
+
+
+    //next we can process the data and present the results.
 
 
     
