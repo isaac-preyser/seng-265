@@ -307,6 +307,67 @@ void freeResponses(Response* responses, int response_count) {
     }
 }
 
+float* calcPercents(Response responses[], Question q, int response_count, char* likert_options[]) {
+    // Array to store counts of each Likert option (6 options from Strongly Disagree to Strongly Agree)
+    int likert_counts[MAX_LIKERT_AMOUNT] = {0};
+    
+    // Loop through each response
+    for (int i = 0; i < response_count; i++) {
+        // Check if the response has the answer to this question
+        if (responses[i].answer[q.question_number - 1] != NULL) {
+            // Get the answer for this question
+            char* answer = responses[i].answer[q.question_number - 1];
+            
+            // Compare the answer with Likert options and increment the corresponding count
+            for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
+                if (strcmp(answer, likert_options[j]) == 0) {
+                    likert_counts[j]++;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Array to store the percentages
+    float* percentages = malloc(MAX_LIKERT_AMOUNT * sizeof(float));
+    if (percentages == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    
+    // Calculate the percentage for each Likert option
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+        percentages[i] = ((float)likert_counts[i] / response_count) * 100;
+    }
+
+    return percentages;
+}
+
+void outputPercentiles(Question questions[], Response responses[], int response_count, char* likert_options[]) {
+    printf("Examining Science and Engineering Students' Attitudes Towards Computer Science\n");
+    printf("SURVEY RESPONSE STATISTICS\n\n");
+    printf("NUMBER OF RESPONDENTS: %d\n\n", response_count);
+    printf("FOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n\n");
+
+    // Loop through each question, and output the relative percentual frequencies for each level of agreement. 
+    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+        if (questions[i].question == NULL) {
+            break;
+        }
+        float* percents = calcPercents(responses, questions[i], response_count, likert_options);
+        printf("%c%d: %s\n", questions[i].question_type, questions[i].question_number, questions[i].question);
+        printf("Strongly Disagree: %.2f\n", percents[0]);
+        printf("Disagree: %.2f\n", percents[1]);
+        printf("Neutral: %.2f\n", percents[2]);
+        printf("Agree: %.2f\n", percents[3]);
+        printf("Strongly Agree: %.2f\n\n", percents[4]);
+    }
+
+    
+ 
+
+}
+
 void cleanup(char** questions, char** answer_options, char** likert_options, Response* responses, int response_count) {
     freeStringArray(questions, MAX_QUESTION_AMOUNT);
     freeStringArray(answer_options, MAX_ANSWER_AMOUNT);
@@ -353,53 +414,11 @@ int main() {
         // Score the response
         scoreResponses(&responses[i], q, likert_options);
     }
+    outputPercentiles(q, responses, response_count, likert_options);
 
-    // Print out the responses and their scores
-    for (int i = 0; i < response_count; i++) {
-        printf("Major: %s\n", responses[i].major);
-        printf("Yes/No: %d\n", responses[i].yes_no);
-        printf("DOB: %d-%d-%d\n", responses[i].dob_year, responses[i].dob_month, responses[i].dob_day);
-        for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
-            if (responses[i].answer[j] == NULL) {
-                break;
-            }
-            printf("Answer %d: %s\n", j + 1, responses[i].answer[j]);
-        }
-
-        // Print out each respondent's scores
-        printf("C Scores: ");
-        for (int j = 0; j < responses[i].c_index; j++) {
-            printf("%d ", responses[i].c_scores[j]);
-        }
-        printf("\n");
-
-        printf("I Scores: ");
-        for (int j = 0; j < responses[i].i_index; j++) {
-            printf("%d ", responses[i].i_scores[j]);
-        }
-        printf("\n");
-
-        printf("G Scores: ");
-        for (int j = 0; j < responses[i].g_index; j++) {
-            printf("%d ", responses[i].g_scores[j]);
-        }
-        printf("\n");
-
-        printf("U Scores: ");
-        for (int j = 0; j < responses[i].u_index; j++) {
-            printf("%d ", responses[i].u_scores[j]);
-        }
-        printf("\n");
-
-        printf("P Scores: ");
-        for (int j = 0; j < responses[i].p_index; j++) {
-            printf("%d ", responses[i].p_scores[j]);
-        }
-        printf("\n");
-    }
-
+    
     // Free allocated memory before exiting
     cleanup(questions, answer_options, likert_options, responses, response_count);
-
+    //need to add percents to cleanup function. 
     return 0;
 }
