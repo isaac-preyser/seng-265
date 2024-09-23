@@ -6,8 +6,11 @@
 #define MAX_QUESTION_AMOUNT 200
 #define MAX_RESPONSE_AMOUNT 50
 #define MAX_LIKERT_AMOUNT 6 // 6 likert options. 
+#define MAX_CATEGORY_AMOUNT 5 // 5 categories- C, I, G, U, P.
 
 //I'm going to attempt this project using dynamic memory allocation.
+//In retrospect, I should have used static memory allocation for a lot more things, as it would have a) been easier to manage, and b) been more efficient.
+//oh well ... next time! 
 typedef struct {
     char* question_content; 
     char question_type; // C, I, G, U, or P
@@ -298,9 +301,16 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
     }
 }
 
-float* calcPercentage(Response responses[], int response_count, Question q) {
+float* calcPercentage(Response responses[], int response_count, Question q, int bit_one) {
     float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); // 6 likert options, corresponding to 6 percentages - 0 (fully disagree) to 5 (fully agree).
     int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
+    if (bit_one == 1) {
+        //if bit one is set, we should return percentages of zero for all questions.
+        for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+            percentages[i] = 0;
+        }
+        return percentages;
+    }
     //search for the question in each of the responses, and increment the count for the corresponding likert option.
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
@@ -328,25 +338,90 @@ float* calcPercentage(Response responses[], int response_count, Question q) {
 
 
 
-float* calcAverages(Response responses[], int response_count) {
-    //scan through the responses, and keep a copy of each unique question_type. 
-    //for each unique question_type, calculate the average score.
+void calcAverages(Response responses[], int response_count, float output[], int output_size) {
+    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    for (int i = 0; i < response_count; i++) {
+        for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
+            if (responses[i].answers[j] == NULL) {
+                break; //break if we reach the end of the answers.
+            }
+            switch(responses[i].answers[j]->corresponding_question->question_type) {
+                case 'C':
+                    averages[0] += responses[i].answers[j]->score;
+                    counts[0]++;
+                    break;
+                case 'I':
+                    averages[1] += responses[i].answers[j]->score;
+                    counts[1]++;
+                    break;
+                case 'G':
+                    averages[2] += responses[i].answers[j]->score;
+                    counts[2]++;
+                    break;
+                case 'U':
+                    averages[3] += responses[i].answers[j]->score;
+                    counts[3]++;
+                    break;
+                case 'P':
+                    averages[4] += responses[i].answers[j]->score;
+                    counts[4]++;
+                    break;
+            }
+        }
+    }
+    //calculate the averages.
+    for (int i = 0; i < output_size; i++) {
+        output[i] = averages[i] /= counts[i];
+    }
+}
 
+void calcAveragesIndividual(Response r, float output[], int output_size) {
+    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+        if (r.answers[i] == NULL) {
+            break; //break if we reach the end of the answers.
+        }
+        switch(r.answers[i]->corresponding_question->question_type) {
+            case 'C':
+                averages[0] += r.answers[i]->score;
+                counts[0]++;
+                break;
+            case 'I':
+                averages[1] += r.answers[i]->score;
+                counts[1]++;
+                break;
+            case 'G':
+                averages[2] += r.answers[i]->score;
+                counts[2]++;
+                break;
+            case 'U':
+                averages[3] += r.answers[i]->score;
+                counts[3]++;
+                break;
+            case 'P':
+                averages[4] += r.answers[i]->score;
+                counts[4]++;
+                break;
+        }
+    }
+    //calculate the averages.
+    for (int i = 0; i < output_size; i++) {
+        output[i] = averages[i] /= counts[i];
+    }
 }
 
 
 //output functions
-void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[]) {
-    printf("Examining Science and Engineering Students' Attitudes Towards Computer Science\n");
-    printf("SURVEY RESPONSE STATISTICS\n\n");
-    printf("NUMBER OF RESPONDENTS: %d\n\n", response_count);
-    printf("FOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n");
+void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[], int bit_one) {
+    printf("\nFOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n");
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (question_bank[i] == NULL) {
             break;
         }
         printf("\n");
-        float* percentages = calcPercentage(responses, response_count, *question_bank[i]);
+        float* percentages = calcPercentage(responses, response_count, *question_bank[i], bit_one);
         printf("%c%d. %s\n", question_bank[i]->question_type, question_bank[i]->question_number, question_bank[i]->question_content);
         for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
             printf("%.2f: %s\n", percentages[j], likert_options[j]);
@@ -355,9 +430,21 @@ void outputPercentages(Question* question_bank[], Response responses[], int resp
     }
 }
 
+void outputPerRespondentAverages(Response responses[], int response_count) {
+    printf("\nSCORES FOR ALL THE RESPONDENTS\n\n");
+    for (int i = 0; i < response_count; i++) {
+        float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+        calcAveragesIndividual(responses[i], averages, MAX_CATEGORY_AMOUNT);
+        printf("C:%.2f,I:%.2f,G:%.2f,U:%.2f,P:%.2f\n", averages[0], averages[1], averages[2], averages[3], averages[4]);
+    }
+
+}
+
 void outputAverages(Response responses[], int response_count) {
-
-
+    printf("\nAVERAGE SCORES PER RESPONDENT\n\n");
+    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    calcAverages(responses, response_count, averages, MAX_CATEGORY_AMOUNT);
+    printf("C:%.2f,I:%.2f,G:%.2f,U:%.2f,P:%.2f\n", averages[0], averages[1], averages[2], averages[3], averages[4]);
 }
 
 //cleanup functions
@@ -459,8 +546,21 @@ int main(){
     // }
 
 
-    //next we can process the data and present the results.
-    outputPercentages(question_bank, responses, response_count, likert_options);
+    //output the results.
+    printf("Examining Science and Engineering Students' Attitudes Towards Computer Science\n");
+    printf("SURVEY RESPONSE STATISTICS\n\n");
+    printf("NUMBER OF RESPONDENTS: %d\n", response_count);
+
+    if(control_bits[0] == 1 || control_bits[1] == 1){
+       outputPercentages(question_bank, responses, response_count, likert_options, control_bits[0]); 
+    }
+    if (control_bits[2] == 1) {
+        outputPerRespondentAverages(responses, response_count);
+    }
+    if (control_bits[3] == 1) {
+        outputAverages(responses, response_count);  
+    }
+    
 
     
 
