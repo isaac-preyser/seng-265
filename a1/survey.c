@@ -73,7 +73,7 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
         int i = 0;
         token = strtok(line, delimiters);
         while (token != NULL && i < max_size) {
-            size_t token_len = strlen(token);
+            size_t token_len = strlen(token); //should I cast this to an int?
             arr[i] = malloc(token_len + 1);
             if (arr[i] == NULL) {
                 fprintf(stderr, "Memory allocation failed\n");
@@ -116,22 +116,35 @@ Question* constructQuestion(char* question, char* answer_option) {
     }
 
     q->question_type = question[0];
-    q->question_number = atoi(&question[1]); // Extract number after the type
+    q->question_number = atoi(&question[1]); // extract number after the type
     int len = strlen(question);
 
-    // Check that the question is longer than 4 characters.
+    // check that the question is longer than 4 characters.
     if (len < 4) {
         printf("Error: Question is too short. Exiting.\n");
         exit(1);
     }
 
+
+
+
     int content_len = len - 4; // keeping only question content. e.g. skip 'C1: '
+    //if the question number is greater than 9, we need to adjust the content length.
+    if (q->question_number > 9) {
+        content_len--;
+    }
+
     q->question_content = malloc(content_len + 1); // +1 for null terminator
     if (q->question_content == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
-    strncpy(q->question_content, &question[4], content_len); // Skip 'C1: '
+    //if the question number is greater than 9, we need to skip an extra character.
+    if (q->question_number > 9) {
+        strncpy(q->question_content, &question[5], content_len); // skip 'C10: '
+    } else {
+        strncpy(q->question_content, &question[4], content_len); // skip 'C1: '
+    }
     q->question_content[content_len] = '\0'; // null terminate the string
 
     q->is_reverse = (answer_option[0] == 'R') ? 1 : 0;
@@ -267,7 +280,7 @@ int reverseScore(char* answer, char* likert_options[]) {
 
 
 
-void calculateScores(Response* responses, int response_count, char* likert_options[]) {
+void calculateScores(Response responses[], int response_count, char* likert_options[]) {
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
             if (responses[i].answers[j] == NULL) {
@@ -285,6 +298,67 @@ void calculateScores(Response* responses, int response_count, char* likert_optio
     }
 }
 
+float* calcPercentage(Response responses[], int response_count, Question q) {
+    float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); // 6 likert options, corresponding to 6 percentages - 0 (fully disagree) to 5 (fully agree).
+    int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
+    //search for the question in each of the responses, and increment the count for the corresponding likert option.
+    for (int i = 0; i < response_count; i++) {
+        for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
+            if (responses[i].answers[j] == NULL) {
+                break;
+            }
+            if (responses[i].answers[j]->corresponding_question->question_number == q.question_number && responses[i].answers[j]->corresponding_question->question_type == q.question_type) {
+                //check for reverse scoring. 
+                if (q.is_reverse) {
+                    counts[MAX_LIKERT_AMOUNT - responses[i].answers[j]->score]++;
+                } else {
+                    counts[responses[i].answers[j]->score - 1]++;
+                }
+            }
+        }
+    } 
+    //calculate the percentages.
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+        percentages[i] = (float) counts[i] / response_count * 100;
+    }
+
+    return percentages;
+    //remember to free percentages after use.
+}
+
+
+
+float* calcAverages(Response responses[], int response_count) {
+    //scan through the responses, and keep a copy of each unique question_type. 
+    //for each unique question_type, calculate the average score.
+
+}
+
+
+//output functions
+void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[]) {
+    printf("Examining Science and Engineering Students' Attitudes Towards Computer Science\n");
+    printf("SURVEY RESPONSE STATISTICS\n\n");
+    printf("NUMBER OF RESPONDENTS: %d\n\n", response_count);
+    printf("FOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n");
+    for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
+        if (question_bank[i] == NULL) {
+            break;
+        }
+        printf("\n");
+        float* percentages = calcPercentage(responses, response_count, *question_bank[i]);
+        printf("%c%d. %s\n", question_bank[i]->question_type, question_bank[i]->question_number, question_bank[i]->question_content);
+        for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
+            printf("%.2f: %s\n", percentages[j], likert_options[j]);
+        }
+        free(percentages);
+    }
+}
+
+void outputAverages(Response responses[], int response_count) {
+
+
+}
 
 //cleanup functions
 void freeStringArray(char** arr, int max_size) {
@@ -386,7 +460,7 @@ int main(){
 
 
     //next we can process the data and present the results.
-
+    outputPercentages(question_bank, responses, response_count, likert_options);
 
     
 
