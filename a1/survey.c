@@ -5,7 +5,7 @@
 #define MAX_LINE_LENGTH 3000
 #define MAX_QUESTION_AMOUNT 200
 #define MAX_RESPONSE_AMOUNT 50
-#define MAX_LIKERT_AMOUNT 5 // 6 likert options. 
+#define MAX_LIKERT_AMOUNT 6 // 6 likert options. 
 
 //I'm going to attempt this project using dynamic memory allocation.
 typedef struct {
@@ -94,7 +94,7 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
     }
 }
 
-// Functions to get specific options
+// functions to get specific options
 void getQuestions(char* arr[]) {
     getOptions(arr, MAX_QUESTION_AMOUNT, ";\n");
 }
@@ -159,7 +159,7 @@ Answer* constructAnswer(char* answer, Question* corresponding_question) {
     return a;
 }
 
-// Parsing functions
+// parsing functions
 void parseMajor(char* token, Response* r) {
     if (token) {
         size_t len = strlen(token);
@@ -242,8 +242,30 @@ Response getNextResponse(Question* question_bank[]) {
 //calculation and output functions
 
 //maybe use a helper function to calculate the scores for each response.
+//RECALL: "fully disagree" = likert[0], "fully agree" = likert[5].
+//FROM THE SPEC: The score for a question is the index of the answer in the likert scale, plus 1. 
+
 //direct
+int directScore(char* answer, char* likert_options[]) {
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+        if (strcmp(answer, likert_options[i]) == 0) {
+            return i + 1;
+        }
+    }
+    return -1; // error case
+}
+
 //reverse
+int reverseScore(char* answer, char* likert_options[]) {
+    for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+        if (strcmp(answer, likert_options[i]) == 0) {
+            return MAX_LIKERT_AMOUNT - i;
+        }
+    }
+    return -1; // error case
+}
+
+
 
 void calculateScores(Response* responses, int response_count, char* likert_options[]) {
     for (int i = 0; i < response_count; i++) {
@@ -253,13 +275,16 @@ void calculateScores(Response* responses, int response_count, char* likert_optio
             }
             if (responses[i].answers[j]->corresponding_question->is_reverse) {
                 //use reverse scoring. 
+                responses[i].answers[j]->score = reverseScore(responses[i].answers[j]->answer_content, likert_options);
                 
             } else {
                 //use direct scoring.
+                responses[i].answers[j]->score = directScore(responses[i].answers[j]->answer_content, likert_options);
             }
         }
     }
 }
+
 
 //cleanup functions
 void freeStringArray(char** arr, int max_size) {
@@ -306,6 +331,10 @@ int main(){
     getQuestionOptions(question_opts);
     getLikertOptions(likert_options);
 
+    // //print out likert options for debug.
+    // for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
+    //     printf("Likert Option %d: %s\n", i, likert_options[i]);
+    // }
 
     //now we can make + populate the questions array. 
     Question* question_bank[MAX_QUESTION_AMOUNT];
@@ -338,14 +367,20 @@ int main(){
             break;
         }
     }
-    // // print out the responses for debug.
+    calculateScores(responses, response_count, likert_options);
+    // print out the responses for debug.
     // for (int i = 0; i < response_count; i++) {
     //     printf("Response %d:\n", i + 1);
     //     printf("\tMajor: %s\n", responses[i].major);
     //     printf("\tYes/No: %s\n", responses[i].yes_no ? "yes" : "no");
     //     printf("\tDate of Birth: %d-%d-%d\n", responses[i].dob[0], responses[i].dob[1], responses[i].dob[2]);
     //     for (int j = 0; j < question_count; j++) {
-    //         printf("\tAnswer for %c%d: %s\n", responses[i].answers[j]->corresponding_question->question_type, responses[i].answers[j]->corresponding_question->question_number, responses[i].answers[j]->answer_content);
+    //         printf("\tAnswer for %c%d: %s \n\t\tScore: %d", responses[i].answers[j]->corresponding_question->question_type, responses[i].answers[j]->corresponding_question->question_number, responses[i].answers[j]->answer_content, responses[i].answers[j]->score);
+    //         if (responses[i].answers[j]->corresponding_question->is_reverse) {
+    //             printf("\t(Reverse)\n");
+    //         } else {
+    //             printf("\t(Direct)\n");
+    //         }
     //     }
     // }
 
