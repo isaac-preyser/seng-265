@@ -33,7 +33,7 @@ typedef struct {
 
 //plan: 
 //NOTE: everything comes piped in from stdin and all output is piped to stdout.
-//1. Read test bits, and store them in int test_bits[3]. (found on line 0)
+//1. Read control bits, and store them in int control_bits[3]. (found on line 0)
 //2. Read the questions, and create a bank of questions. line 1 contains the questsions, and line 2 will have the question properties (direct or reverse). 
 //3. read the likert terms, and store them in a string array. 
 //4. read responses (one per line), and store them in an array of responses. 
@@ -217,7 +217,7 @@ void parseAnswers(Response* r, Question* question_bank[]) {
         token = strtok(NULL, ",\n");
         i++;
     }
-    // Nullify the rest of the answers
+    // nullify the rest of the answers
     for (int j = i; j < MAX_QUESTION_AMOUNT; j++) {
         r->answers[j] = NULL;
     }
@@ -259,7 +259,7 @@ Response getNextResponse(Question* question_bank[]) {
 
 //maybe use a helper function to calculate the scores for each response.
 //RECALL: "fully disagree" = likert[0], "fully agree" = likert[5].
-//FROM THE SPEC: The score for a question is the index of the answer in the likert scale, plus 1. 
+//FROM THE ASSIGNMENT SHEET: The score for a question is the index of the answer in the likert scale, plus 1. 
 
 //direct
 int directScore(char* answer, char* likert_options[]) {
@@ -302,7 +302,7 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
 }
 
 float* calcPercentage(Response responses[], int response_count, Question q, int bit_one) {
-    float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); // 6 likert options, corresponding to 6 percentages - 0 (fully disagree) to 5 (fully agree).
+    float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
     int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
     if (bit_one == 1) {
         //if bit one is set, we should return percentages of zero for all questions.
@@ -333,7 +333,7 @@ float* calcPercentage(Response responses[], int response_count, Question q, int 
     }
 
     return percentages;
-    //remember to free percentages after use.
+    //note: remember to free percentages after use.
 }
 
 
@@ -346,6 +346,7 @@ void calcAverages(Response responses[], int response_count, float output[], int 
             if (responses[i].answers[j] == NULL) {
                 break; //break if we reach the end of the answers.
             }
+            //increment the averages and counts.
             switch(responses[i].answers[j]->corresponding_question->question_type) {
                 case 'C':
                     averages[0] += responses[i].answers[j]->score;
@@ -383,6 +384,7 @@ void calcAveragesIndividual(Response r, float output[], int output_size) {
         if (r.answers[i] == NULL) {
             break; //break if we reach the end of the answers.
         }
+        //increment the averages and counts.
         switch(r.answers[i]->corresponding_question->question_type) {
             case 'C':
                 averages[0] += r.answers[i]->score;
@@ -449,35 +451,35 @@ void outputAverages(Response responses[], int response_count) {
 
 //cleanup functions
 void freeStringArray(char** arr, int max_size) {
-    if (arr == NULL) return; // Check if array is NULL
+    if (arr == NULL) return; // check if array is NULL
     for (int i = 0; i < max_size; i++) {
         if (arr[i] != NULL) {
             free(arr[i]);
-            arr[i] = NULL; // Set to NULL to prevent double freeing
+            arr[i] = NULL; // set to NULL to prevent double freeing
         }
     }
 }
 
 void freeQuestionBank(Question** question_bank, int max_size) {
-    if (question_bank == NULL) return; // Check if question_bank is NULL
+    if (question_bank == NULL) return; // check if question_bank is NULL
     for (int i = 0; i < max_size; i++) {
         if (question_bank[i] != NULL) {
             free(question_bank[i]->question_content);
             free(question_bank[i]);
-            question_bank[i] = NULL; // Set to NULL to prevent double freeing
+            question_bank[i] = NULL; // set to NULL to prevent double freeing
         }
     }
 }
 
 void freeResponse(Response* r) {
-    if (r == NULL) return; // Check if response is NULL
+    if (r == NULL) return; // check if response is NULL
     free(r->major);
-    r->major = NULL; // Set to NULL to prevent double freeing
+    r->major = NULL; // set to NULL to prevent double freeing
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (r->answers[i] != NULL) {
             free(r->answers[i]->answer_content);
             free(r->answers[i]);
-            r->answers[i] = NULL; // Set to NULL to prevent double freeing
+            r->answers[i] = NULL; // set to NULL to prevent double freeing
         }
     }
 }
