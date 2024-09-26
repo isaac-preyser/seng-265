@@ -80,7 +80,7 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
             size_t token_len = strlen(token); //should I cast this to an int?
             arr[i] = malloc(token_len + 1);
             if (arr[i] == NULL) {
-                fprintf(stderr, "Memory allocation failed\n");
+                fprintf(stderr, "Memory allocation failed (allocating space for arr[i] in void getOptions)\n");
                 exit(1);
             }
             strncpy(arr[i], token, token_len);
@@ -115,7 +115,7 @@ void getLikertOptions(char* arr[]) {
 Question* constructQuestion(char* question, char* answer_option) {
     Question* q = malloc(sizeof(Question));
     if (q == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed (allocating space for a new Question q in Question* constructQuestion)\n");
         exit(1);
     }
 
@@ -140,7 +140,7 @@ Question* constructQuestion(char* question, char* answer_option) {
 
     q->question_content = malloc(content_len + 1); // +1 for null terminator
     if (q->question_content == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed (allocating space for question_content in Question* constructQuestion)\n");
         exit(1);
     }
     //if the question number is greater than 9, we need to skip an extra character.
@@ -159,13 +159,13 @@ Question* constructQuestion(char* question, char* answer_option) {
 Answer* constructAnswer(char* answer, Question* corresponding_question) {
     Answer* a = malloc(sizeof(Answer));
     if (a == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed (Answer* constructAnswer, allocating space for new Answer a)\n");
         exit(1);
     }
 
     a->answer_content = malloc(strlen(answer) + 1);
     if (a->answer_content == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed (Answer* constructAnswer, allocating space for answer_content.)\n");
         exit(1);
     }
     strcpy(a->answer_content, answer);
@@ -182,7 +182,7 @@ void parseMajor(char* token, Response* r) {
         size_t len = strlen(token);
         r->major = malloc(len + 1);
         if (r->major == NULL) {
-            fprintf(stderr, "Memory allocation failed\n");
+            fprintf(stderr, "Memory allocation failed (void parseMajor)\n");
             exit(1);
         }
         strncpy(r->major, token, len);
@@ -224,6 +224,8 @@ void parseAnswers(Response* r, Question* question_bank[]) {
     }
 }
 
+
+//this function should be refactored to return type Response*, rather than Response, to save memory
 Response getNextResponse(Question* question_bank[]) {
     Response r = {0};  // zero-initialize all fields
     char line[MAX_LINE_LENGTH];
@@ -238,19 +240,15 @@ Response getNextResponse(Question* question_bank[]) {
         return r;  // return the "empty" response if no more input
     }
 
-    // major
     token = strtok(line, ",\n");
     parseMajor(token, &r);
 
-    // yes/no
     token = strtok(NULL, ",\n");
     parseYesNo(token, &r);
 
-    // date of birth
     token = strtok(NULL, ",\n");
     parseDateOfBirth(token, &r);
 
-    // answers
     parseAnswers(&r, question_bank);
 
     return r;
@@ -302,8 +300,19 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
     }
 }
 
+//this function returns an array of floats (as large as MAX_LIKERT_AMOUNT).
+//this output array will contain a series of floats corresponding to the percentage of answers
+//corresponding to eac question. 
+
+//e.g., given a question q (and 6 potential responses), returns:[ 10.00, 0.00, 15.00, 25.00, 0.00
+// , 50.00]
+
 float* calcPercentage(Response responses[], int response_count, Question q, int bit_one) {
     float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
+    if (percentages == NULL) {
+        fprintf(stderr, "allocating space for *percentages in float calcPercentage");
+        exit(1); 
+    }
     int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
     if (bit_one == 1) {
         //if bit one is set, we should return percentages of zero for all questions.
@@ -318,6 +327,7 @@ float* calcPercentage(Response responses[], int response_count, Question q, int 
             if (responses[i].answers[j] == NULL) {
                 break;
             }
+            //check if the answer corresponds with the target question number and type. 
             if (responses[i].answers[j]->corresponding_question->question_number == q.question_number && responses[i].answers[j]->corresponding_question->question_type == q.question_type) {
                 //check for reverse scoring. 
                 if (q.is_reverse) {
