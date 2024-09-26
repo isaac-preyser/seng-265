@@ -64,7 +64,8 @@ int* getControlBits() {
 
     return control_bits;
 }
-
+//general function to grab options from a string, seperated by specified delimiters. 
+//accepts an array of max_size length and fills it with options until either no more options, or array is full. 
 void getOptions(char* arr[], int max_size, const char* delimiters) {
     char line[MAX_LINE_LENGTH];
     char* token;
@@ -78,7 +79,7 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
         token = strtok(line, delimiters);
         while (token != NULL && i < max_size) {
             size_t token_len = strlen(token); //should I cast this to an int?
-            arr[i] = malloc(token_len + 1);
+            arr[i] = (char *)malloc(token_len + 1);
             if (arr[i] == NULL) {
                 fprintf(stderr, "Memory allocation failed (allocating space for arr[i] in void getOptions)\n");
                 exit(1);
@@ -113,7 +114,7 @@ void getLikertOptions(char* arr[]) {
 
 //constructors
 Question* constructQuestion(char* question, char* answer_option) {
-    Question* q = malloc(sizeof(Question));
+    Question* q = (Question *)malloc(sizeof(Question));
     if (q == NULL) {
         fprintf(stderr, "Memory allocation failed (allocating space for a new Question q in Question* constructQuestion)\n");
         exit(1);
@@ -124,6 +125,7 @@ Question* constructQuestion(char* question, char* answer_option) {
     int len = strlen(question);
 
     // check that the question is longer than 4 characters.
+    // otherwise, the code below would break the string we are wokring on and do funky stuff (that I don't want)
     if (len < 4) {
         printf("Error: Question is too short. Exiting.\n");
         exit(1);
@@ -138,7 +140,7 @@ Question* constructQuestion(char* question, char* answer_option) {
         content_len--;
     }
 
-    q->question_content = malloc(content_len + 1); // +1 for null terminator
+    q->question_content = (char *)malloc(content_len + 1); // +1 for null terminator
     if (q->question_content == NULL) {
         fprintf(stderr, "Memory allocation failed (allocating space for question_content in Question* constructQuestion)\n");
         exit(1);
@@ -157,13 +159,13 @@ Question* constructQuestion(char* question, char* answer_option) {
 }
 
 Answer* constructAnswer(char* answer, Question* corresponding_question) {
-    Answer* a = malloc(sizeof(Answer));
+    Answer* a = (Answer *)malloc(sizeof(Answer));
     if (a == NULL) {
         fprintf(stderr, "Memory allocation failed (Answer* constructAnswer, allocating space for new Answer a)\n");
         exit(1);
     }
 
-    a->answer_content = malloc(strlen(answer) + 1);
+    a->answer_content = (char *)malloc(strlen(answer) + 1);
     if (a->answer_content == NULL) {
         fprintf(stderr, "Memory allocation failed (Answer* constructAnswer, allocating space for answer_content.)\n");
         exit(1);
@@ -180,7 +182,7 @@ Answer* constructAnswer(char* answer, Question* corresponding_question) {
 void parseMajor(char* token, Response* r) {
     if (token) {
         size_t len = strlen(token);
-        r->major = malloc(len + 1);
+        r->major = (char *)malloc(len + 1);
         if (r->major == NULL) {
             fprintf(stderr, "Memory allocation failed (void parseMajor)\n");
             exit(1);
@@ -308,7 +310,7 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
 // , 50.00]
 
 float* calcPercentage(Response responses[], int response_count, Question q, int bit_one) {
-    float* percentages = malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
+    float* percentages = (float *)malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
     if (percentages == NULL) {
         fprintf(stderr, "allocating space for *percentages in float calcPercentage");
         exit(1); 
