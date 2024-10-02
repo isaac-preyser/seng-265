@@ -22,7 +22,8 @@ typedef struct {
 typedef struct {
     char* answer_content; 
     Question* corresponding_question;
-    int score;  
+    int score;
+    //perhaps include a function pointer to a scoring function in here. (just to see what happens.. lol) 
 } Answer;
 
 typedef struct {
@@ -41,7 +42,7 @@ typedef struct {
 //5. process data and present results.
 
 int* getControlBits() {
-    static int control_bits[3] = {0};  // initialize to zero
+    static int control_bits[3] = {0};  // initialize to zero. this also assumes that there will only ever be 4 control bits.
     char line[MAX_LINE_LENGTH];
 
     while (fgets(line, MAX_LINE_LENGTH, stdin) != NULL) {
@@ -60,6 +61,8 @@ int* getControlBits() {
             break;
         }
         // if we couldn't parse any integers, continue to the next line
+
+	//the above should probably be more specific, but I guess it's ok. 
     }
 
     return control_bits;
@@ -99,7 +102,7 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
     }
 }
 
-// functions to get specific options
+// function calls to getOptions to get specific options
 void getQuestions(char* arr[]) {
     getOptions(arr, MAX_QUESTION_AMOUNT, ";\n");
 }
@@ -319,7 +322,7 @@ float* calcPercentage(Response responses[], int response_count, Question q, int 
     if (bit_one == 1) {
         //if bit one is set, we should return percentages of zero for all questions.
         for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
-            percentages[i] = 0;
+            percentages[i] = 0; 
         }
         return percentages;
     }
