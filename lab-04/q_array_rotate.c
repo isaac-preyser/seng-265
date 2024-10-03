@@ -3,42 +3,49 @@
 
 #define MAX_SIZE 10
 
- int main(){
+//function def
 
-         int i = 0;
-         char *sep = "";
-         // declare and initialize an int array arr_1 of size MAX_SIZE and initialize it with random values
-         // For example, declare and initialize arr_1 to {1,2,3,4,5,6,7,8,9,10}
-         int arr_1[MAX_SIZE] = {1,2,3,4,5,6,7,8,9,10};
+void rotate(int* arr, int len, int n); 
 
-         // This for statement prints the content of arr_1 to console
-         for (i = 0; i < MAX_SIZE; i++) {
-             printf("%s%d", sep, arr_1[i]);
-             sep = ", ";
-         }
-         printf("\n");
 
-         // call rotate() with num = 1
+int main(){
 
-         sep = "";
-         for (i = 0; i < MAX_SIZE; i++) {
-             printf("%s%d", sep, arr_1[i]);
-             sep = ", ";
-         }
-         printf("\n");
-         // Outcome on console from the above for loop should be 2, 3, 4, 5, 6, 7, 8, 9, 10, 1
+        int i = 0;
+        char *sep = "";
+        // declare and initialize an int array arr_1 of size MAX_SIZE and initialize it with random values
+        // For example, declare and initialize arr_1 to {1,2,3,4,5,6,7,8,9,10}
+        int arr_1[MAX_SIZE] = {1,2,3,4,5,6,7,8,9,10};
 
-          // call rotate() with num = 2
+        // This for statement prints the content of arr_1 to console
+        for (i = 0; i < MAX_SIZE; i++) {
+            printf("%s%d", sep, arr_1[i]);
+            sep = ", ";
+        }
+        printf("\n");
 
-          sep = "";
-          for (i = 0; i < MAX_SIZE; i++) {
-              printf("%s%d", sep, arr_1[i]);
-              sep = ", ";
-          }
-          printf("\n");
-          // Outcome on console from the above for loop should be 4, 5, 6, 7, 8, 9, 10, 1, 2, 3
+        // call rotate() with num = 1
+        rotate(arr_1, MAX_SIZE, 1);
 
- }
+        sep = "";
+        for (i = 0; i < MAX_SIZE; i++) {
+            printf("%s%d", sep, arr_1[i]);
+            sep = ", ";
+        }
+        printf("\n");
+        // Outcome on console from the above for loop should be 2, 3, 4, 5, 6, 7, 8, 9, 10, 1
+
+        // call rotate() with num = 2
+        rotate(arr_1, MAX_SIZE, 2);
+
+        sep = "";
+        for (i = 0; i < MAX_SIZE; i++) {
+            printf("%s%d", sep, arr_1[i]);
+            sep = ", ";
+        }
+        printf("\n");
+        // Outcome on console from the above for loop should be 4, 5, 6, 7, 8, 9, 10, 1, 2, 3
+
+}
 
 
  /*
@@ -48,3 +55,35 @@
   * Another example, if at the start, arr_1 is {2,4,6,8,1,5},
   * calling arr_1 with num = 2 should change arr_1 to {6,8,1,5,2,4}
   */
+
+//making the key assumption that the user does not specify n longer than the array length.
+//also assuming that arr is always statically allocated.  
+void rotate(int* arr, int len, int n){
+   // printf("allocating buffer space.. (n = %d)\n", n);
+    int* buffer = (int*)malloc(sizeof(int) * n);
+    if (buffer == NULL){
+        fprintf(stderr, "broski, malloc failed.");
+        exit(1);
+    } else {
+       // printf("success! (size = %d)\n");
+    }
+
+    //perform rotation
+
+    //store the first 'n' elements in the buffer
+    for (int i = 0; i < n; i++) {
+        buffer[i] = arr[i];
+    }
+
+    //shift the remaining elements in the array to the left
+    for (int i = n; i < len; i++) {
+        arr[i - n] = arr[i];
+    }
+
+    //move the buffered elements to the end of the array
+    for (int i = 0; i < n; i++) {
+        arr[len - n + i] = buffer[i];
+    }
+
+    free(buffer);
+}

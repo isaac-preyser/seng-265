@@ -3,6 +3,8 @@
 # include <string.h>
 # include <ctype.h>
 
+#define MAX_LINE_LEN 5000
+
 
 int word_freq(char *sentence, char *word);
 
@@ -63,30 +65,35 @@ int main(int argc, char*argv[]){
         printf("The word \"%s\" appears %d times in st0.\n", word, num);
 
 
-        /* Code below is commented out while you work on getting word_freq
-         * to operate correctly on st0.
 
         num = word_freq(st1, word);
         printf("The word \"%s\" appears %d times in st1.\n", word, num);
 
-        */
 }
 
 /*
  * COMPLETE IMPLEMENTATION OF THE FUNCTION BELOW
  */
 
-int word_freq(char *sentence, char *word){
+int word_freq(char *sentence, char *word) {
+    char sentence_copy[MAX_LINE_LEN];
+    
+    strncpy(sentence_copy, sentence, MAX_LINE_LEN - 1);
+    sentence_copy[MAX_LINE_LEN - 1] = '\0';  // Ensure null termination
+    
+    int count = 0;
+    
+    char *delimiters = " \n";
+    char *tok = strtok(sentence_copy, delimiters);
+    
+    while (tok != NULL) {
+        // Check if `word` is a substring of `tok`
+        if (strstr(tok, word) != NULL) {
+            count++;
+        }
+        tok = strtok(NULL, delimiters);
+    }
 
-        /* Uses strtok to determine and return how may times
-         * the string `word` appears in the string `sentence`.
-         *
-         * Please remember that C strings are really special
-         * intepretations of the contents of a character array
-         * (i.e., the string stored in a character array may be
-         * shorter -- even much shorter -- than the size of the
-         * array).
-         */
-
-        return -1;
+    return count;
 }
+
