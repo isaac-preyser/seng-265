@@ -14,16 +14,10 @@
 // figure out some way to keep track of how many times we have expanded our array. 
 // convert Responses[] array to a Response* [] array (to be more flexible with how memory is allocated.)
 // write a function to parse filtering terms, and perform control logic in the output. 
-// 
+//  
 
 
 
-
-
-//I'm going to attempt this project using dynamic memory allocation.
-//In retrospect, I should have used static memory allocation for a lot more things, as it would have a) been easier to manage, and b) been more efficient.
-//Essentially, I challenged myself in an attempt to master malloc(), but I ultimately discovered that it was not the best choice, 
-//and that malloc is ridiculously difficult to manage, and that it's slow!
 typedef struct {
     char* question_content; 
     char question_type; // C, I, G, U, or P
@@ -260,8 +254,9 @@ void parseAnswers(Response* r, Question* question_bank[]) {
 
 
 //this function should be refactored to return type Response*, rather than Response, to save memory
-Response getNextResponse(Question* question_bank[]) {
-    Response r = {0};  // zero-initialize all fields
+Response* getNextResponse(Question* question_bank[]) {
+    Response* r = NULL;  // zero-initialize all fields
+    r = (Response *)malloc(sizeof(Response));
     char line[MAX_LINE_LENGTH];
     char* token;
 
@@ -275,15 +270,15 @@ Response getNextResponse(Question* question_bank[]) {
     }
 
     token = strtok(line, ",\n");
-    parseMajor(token, &r);
+    parseMajor(token, r);
 
     token = strtok(NULL, ",\n");
-    parseYesNo(token, &r);
+    parseYesNo(token, r);
 
     token = strtok(NULL, ",\n");
-    parseDateOfBirth(token, &r);
+    parseDateOfBirth(token, r);
 
-    parseAnswers(&r, question_bank);
+    parseAnswers(r, question_bank);
 
     return r;
 }
@@ -316,19 +311,19 @@ int reverseScore(char* answer, char* likert_options[]) {
 
 
 
-void calculateScores(Response responses[], int response_count, char* likert_options[]) {
+void calculateScores(Response* responses[], int response_count, char* likert_options[]) {
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
-            if (responses[i].answers[j] == NULL) {
+            if (responses[i]->answers[j] == NULL) {
                 break;
             }
-            if (responses[i].answers[j]->corresponding_question->is_reverse) {
+            if (responses[i]->answers[j]->corresponding_question->is_reverse) {
                 //use reverse scoring. 
-                responses[i].answers[j]->score = reverseScore(responses[i].answers[j]->answer_content, likert_options);
+                responses[i]->answers[j]->score = reverseScore(responses[i]->answers[j]->answer_content, likert_options);
                 
             } else {
                 //use direct scoring.
-                responses[i].answers[j]->score = directScore(responses[i].answers[j]->answer_content, likert_options);
+                responses[i]->answers[j]->score = directScore(responses[i]->answers[j]->answer_content, likert_options);
             }
         }
     }
@@ -341,7 +336,7 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
 //e.g., given a question q (and 6 potential responses), returns:[ 10.00, 0.00, 15.00, 25.00, 0.00
 // , 50.00]
 
-float* calcPercentage(Response responses[], int response_count, Question q) {
+float* calcPercentage(Response* responses[], int response_count, Question q) {
     float* percentages = (float *)malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
     if (percentages == NULL) {
         fprintf(stderr, "allocating space for *percentages in float calcPercentage");
@@ -351,16 +346,16 @@ float* calcPercentage(Response responses[], int response_count, Question q) {
     //search for the question in each of the responses, and increment the count for the corresponding likert option.
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
-            if (responses[i].answers[j] == NULL) {
+            if (responses[i]->answers[j] == NULL) {
                 break;
             }
             //check if the answer corresponds with the target question number and type. 
-            if (responses[i].answers[j]->corresponding_question->question_number == q.question_number && responses[i].answers[j]->corresponding_question->question_type == q.question_type) {
+            if (responses[i]->answers[j]->corresponding_question->question_number == q.question_number && responses[i]->answers[j]->corresponding_question->question_type == q.question_type) {
                 //check for reverse scoring. 
                 if (q.is_reverse) {
-                    counts[MAX_LIKERT_AMOUNT - responses[i].answers[j]->score]++;
+                    counts[MAX_LIKERT_AMOUNT - responses[i]->answers[j]->score]++;
                 } else {
-                    counts[responses[i].answers[j]->score - 1]++;
+                    counts[responses[i]->answers[j]->score - 1]++;
                 }
             }
         }
@@ -375,35 +370,34 @@ float* calcPercentage(Response responses[], int response_count, Question q) {
 }
 
 
-
-void calcAverages(Response responses[], int response_count, float output[], int output_size) {
+void calcAverages(Response* responses[], int response_count, float output[], int output_size) {
     float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
-            if (responses[i].answers[j] == NULL) {
+            if (responses[i]->answers[j] == NULL) {
                 break; //break if we reach the end of the answers.
             }
             //increment the averages and counts.
-            switch(responses[i].answers[j]->corresponding_question->question_type) {
+            switch(responses[i]->answers[j]->corresponding_question->question_type) {
                 case 'C':
-                    averages[0] += responses[i].answers[j]->score;
+                    averages[0] += responses[i]->answers[j]->score;
                     counts[0]++;
                     break;
                 case 'I':
-                    averages[1] += responses[i].answers[j]->score;
+                    averages[1] += responses[i]->answers[j]->score;
                     counts[1]++;
                     break;
                 case 'G':
-                    averages[2] += responses[i].answers[j]->score;
+                    averages[2] += responses[i]->answers[j]->score;
                     counts[2]++;
                     break;
                 case 'U':
-                    averages[3] += responses[i].answers[j]->score;
+                    averages[3] += responses[i]->answers[j]->score;
                     counts[3]++;
                     break;
                 case 'P':
-                    averages[4] += responses[i].answers[j]->score;
+                    averages[4] += responses[i]->answers[j]->score;
                     counts[4]++;
                     break;
             }
@@ -415,46 +409,45 @@ void calcAverages(Response responses[], int response_count, float output[], int 
     }
 }
 
-void calcAveragesIndividual(Response r, float output[], int output_size) {
+void calcAveragesIndividual(Response* r, float output[], int output_size) {
     float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
-        if (r.answers[i] == NULL) {
+        if (r->answers[i] == NULL) {
             break; //break if we reach the end of the answers.
         }
         //increment the averages and counts.
-        switch(r.answers[i]->corresponding_question->question_type) {
+        switch(r->answers[i]->corresponding_question->question_type) {
             case 'C':
-                averages[0] += r.answers[i]->score;
+                averages[0] += r->answers[i]->score;
                 counts[0]++;
                 break;
             case 'I':
-                averages[1] += r.answers[i]->score;
+                averages[1] += r->answers[i]->score;
                 counts[1]++;
                 break;
             case 'G':
-                averages[2] += r.answers[i]->score;
+                averages[2] += r->answers[i]->score;
                 counts[2]++;
                 break;
             case 'U':
-                averages[3] += r.answers[i]->score;
+                averages[3] += r->answers[i]->score;
                 counts[3]++;
                 break;
             case 'P':
-                averages[4] += r.answers[i]->score;
+                averages[4] += r->answers[i]->score;
                 counts[4]++;
                 break;
         }
     }
     //calculate the averages.
     for (int i = 0; i < output_size; i++) {
-        output[i] = averages[i] /= counts[i]; //come back to this; using /= instead of /, which is irrelevant. 
+        output[i] = averages[i] /= counts[i];
     }
 }
 
-
 //output functions
-void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[]) {
+void outputPercentages(Question* question_bank[], Response* responses[], int response_count, char* likert_options[]) {
     printf("\nFOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n");
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (question_bank[i] == NULL) {
@@ -470,7 +463,7 @@ void outputPercentages(Question* question_bank[], Response responses[], int resp
     }
 }
 
-void outputPerRespondentAverages(Response responses[], int response_count) {
+void outputPerRespondentAverages(Response* responses[], int response_count) {
     printf("\nSCORES FOR ALL THE RESPONDENTS\n\n");
     for (int i = 0; i < response_count; i++) {
         float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
@@ -480,7 +473,7 @@ void outputPerRespondentAverages(Response responses[], int response_count) {
 
 }
 
-void outputAverages(Response responses[], int response_count) {
+void outputAverages(Response* responses[], int response_count) {
     printf("\nAVERAGE SCORES PER RESPONDENT\n\n");
     float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     calcAverages(responses, response_count, averages, MAX_CATEGORY_AMOUNT);
@@ -566,10 +559,10 @@ int main(){
     // printf("Number of responses: %d\n", response_count);
 
     //now we can get the responses.
-    Response responses[MAX_RESPONSE_AMOUNT];
-    for (int i = 0; i < MAX_RESPONSE_AMOUNT; i++) {
+    Response** responses = malloc(sizeof(Response*) * response_count);
+    for (int i = 0; i < response_count; i++) {
         responses[i] = getNextResponse(question_bank);
-        if (responses[i].major == NULL) {
+        if (responses[i]->major == NULL) {
             response_count = i; //this might cause problems
             break;
         }
@@ -617,7 +610,7 @@ int main(){
     freeStringArray(likert_options, MAX_LIKERT_AMOUNT);
     freeQuestionBank(question_bank, question_count);
     for (int i = 0; i < response_count; i++) {
-        freeResponse(&responses[i]); // &responses[i] is valid as long as responses[i] is not NULL
+        freeResponse(responses[i]); // responses[i] is valid as long as responses[i] is not NULL
     }
     return 0; 
 }
