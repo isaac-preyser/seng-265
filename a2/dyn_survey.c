@@ -54,7 +54,7 @@ typedef struct {
 //5. process data and present results.
 
 int* getControlBits() {
-    static int control_bits[3] = {0};  // initialize to zero. this also assumes that there will only ever be 4 control bits.
+    static int control_bits[2] = {0};  // initialize to zero. this also assumes that there will only ever be 4 control bits.
     char line[MAX_LINE_LENGTH];
 
     while (fgets(line, MAX_LINE_LENGTH, stdin) != NULL) {
@@ -64,9 +64,9 @@ int* getControlBits() {
         }
 
         // try to parse 4 integers from the line
-        int parsed = sscanf(line, "%d,%d,%d,%d",
+        int parsed = sscanf(line, "%d,%d,%d",
                             &control_bits[0], &control_bits[1],
-                            &control_bits[2], &control_bits[3]);
+                            &control_bits[2]);
 
         // if we parsed at least one integer, we're done
         if (parsed > 0) {
@@ -113,6 +113,23 @@ void getOptions(char* arr[], int max_size, const char* delimiters) {
         break;  // we only want the first non-comment line
     }
 }
+
+
+int getResponseCount(){
+    char line[MAX_LINE_LENGTH];
+    while (fgets(line, MAX_LINE_LENGTH, stdin) != NULL) {
+        if (line[0] == '#') {
+            continue;
+        }
+        int response_count = atoi(line);
+        return response_count;
+    }
+    return -1; //if we reach this point, something went wrong.
+}
+
+
+
+
 
 // function calls to getOptions to get specific options
 void getQuestions(char* arr[]) {
@@ -324,20 +341,13 @@ void calculateScores(Response responses[], int response_count, char* likert_opti
 //e.g., given a question q (and 6 potential responses), returns:[ 10.00, 0.00, 15.00, 25.00, 0.00
 // , 50.00]
 
-float* calcPercentage(Response responses[], int response_count, Question q, int bit_one) {
+float* calcPercentage(Response responses[], int response_count, Question q) {
     float* percentages = (float *)malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
     if (percentages == NULL) {
         fprintf(stderr, "allocating space for *percentages in float calcPercentage");
         exit(1); 
     }
     int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
-    if (bit_one == 1) {
-        //if bit one is set, we should return percentages of zero for all questions.
-        for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
-            percentages[i] = 0; 
-        }
-        return percentages;
-    }
     //search for the question in each of the responses, and increment the count for the corresponding likert option.
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
@@ -444,14 +454,14 @@ void calcAveragesIndividual(Response r, float output[], int output_size) {
 
 
 //output functions
-void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[], int bit_one) {
+void outputPercentages(Question* question_bank[], Response responses[], int response_count, char* likert_options[]) {
     printf("\nFOR EACH QUESTION BELOW, RELATIVE PERCENTUAL FREQUENCIES ARE COMPUTED FOR EACH LEVEL OF AGREEMENT\n");
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (question_bank[i] == NULL) {
             break;
         }
         printf("\n");
-        float* percentages = calcPercentage(responses, response_count, *question_bank[i], bit_one);
+        float* percentages = calcPercentage(responses, response_count, *question_bank[i]);
         printf("%c%d. %s\n", question_bank[i]->question_type, question_bank[i]->question_number, question_bank[i]->question_content);
         for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
             printf("%.2f: %s\n", percentages[j], likert_options[j]);
@@ -548,13 +558,19 @@ int main(){
     //     }
     // }
 
+    //before we can get the responses, we must determine the number of responses in the survey. 
+
+
+    int response_count = getResponseCount();
+    //print the number of responses for debug.
+    // printf("Number of responses: %d\n", response_count);
+
     //now we can get the responses.
     Response responses[MAX_RESPONSE_AMOUNT];
-    int response_count = 0;
     for (int i = 0; i < MAX_RESPONSE_AMOUNT; i++) {
         responses[i] = getNextResponse(question_bank);
         if (responses[i].major == NULL) {
-            response_count = i;
+            response_count = i; //this might cause problems
             break;
         }
     }
@@ -581,8 +597,8 @@ int main(){
     printf("SURVEY RESPONSE STATISTICS\n\n");
     printf("NUMBER OF RESPONDENTS: %d\n", response_count);
 
-    if(control_bits[0] == 1 || control_bits[1] == 1){
-       outputPercentages(question_bank, responses, response_count, likert_options, control_bits[0]); 
+    if(control_bits[0] == 1){
+       outputPercentages(question_bank, responses, response_count, likert_options); 
     }
     if (control_bits[2] == 1) {
         outputPerRespondentAverages(responses, response_count);
