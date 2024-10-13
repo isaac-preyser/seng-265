@@ -15,7 +15,7 @@ void outputPercentages(Question* question_bank[], Respondent* responses[], int r
             break;
         }
         printf("\n");
-        float* percentages = calcPercentage(responses, response_count, *question_bank[i]);
+        double* percentages = calcPercentage(responses, response_count, *question_bank[i]);
         printf("%c%d. %s\n", question_bank[i]->question_type, question_bank[i]->question_number, question_bank[i]->question_content);
         for (int j = 0; j < MAX_LIKERT_AMOUNT; j++) {
             printf("%.2f: %s\n", percentages[j], likert_options[j]);
@@ -27,7 +27,7 @@ void outputPercentages(Question* question_bank[], Respondent* responses[], int r
 void outputPerRespondentAverages(Respondent* responses[], int response_count) {
     printf("\nSCORES FOR ALL THE RESPONDENTS\n\n");
     for (int i = 0; i < response_count; i++) {
-        float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+        double averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
         calcAveragesIndividual(responses[i], averages, MAX_CATEGORY_AMOUNT);
         printf("C:%.2f,I:%.2f,G:%.2f,U:%.2f,P:%.2f\n", averages[0], averages[1], averages[2], averages[3], averages[4]);
     }
@@ -36,7 +36,7 @@ void outputPerRespondentAverages(Respondent* responses[], int response_count) {
 
 void outputAverages(Respondent* responses[], int response_count) {
     printf("\nAVERAGE SCORES PER RESPONDENT\n\n");
-    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+    double averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     calcAverages(responses, response_count, averages, MAX_CATEGORY_AMOUNT);
     printf("C:%.2f,I:%.2f,G:%.2f,U:%.2f,P:%.2f\n", averages[0], averages[1], averages[2], averages[3], averages[4]);
 }

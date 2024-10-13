@@ -116,11 +116,10 @@ void calculateScores(Respondent* responses[], int response_count, char* likert_o
 
 //e.g., given a question q (and 6 potential responses), returns:[ 10.00, 0.00, 15.00, 25.00, 0.00
 // , 50.00]
-
-float* calcPercentage(Respondent* responses[], int response_count, Question q) {
-    float* percentages = (float *)malloc(sizeof(float) * MAX_LIKERT_AMOUNT); 
+double* calcPercentage(Respondent* responses[], int response_count, Question q) {
+    double* percentages = (double *)malloc(sizeof(double) * MAX_LIKERT_AMOUNT); 
     if (percentages == NULL) {
-        fprintf(stderr, "allocating space for *percentages in float calcPercentage");
+        fprintf(stderr, "allocating space for *percentages in double calcPercentage");
         exit(1); 
     }
     int counts[MAX_LIKERT_AMOUNT] = {0}; // initialize to zero
@@ -143,7 +142,7 @@ float* calcPercentage(Respondent* responses[], int response_count, Question q) {
     } 
     //calculate the percentages.
     for (int i = 0; i < MAX_LIKERT_AMOUNT; i++) {
-        percentages[i] = (float) counts[i] / response_count * 100;
+        percentages[i] = (double) counts[i] / response_count * 100;
     }
 
     return percentages;
@@ -151,8 +150,8 @@ float* calcPercentage(Respondent* responses[], int response_count, Question q) {
 }
 
 
-void calcAverages(Respondent* responses[], int response_count, float output[], int output_size) {
-    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+void calcAverages(Respondent* responses[], int response_count, double output[], int output_size) {
+    double averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     for (int i = 0; i < response_count; i++) {
         for (int j = 0; j < MAX_QUESTION_AMOUNT; j++) {
@@ -190,8 +189,8 @@ void calcAverages(Respondent* responses[], int response_count, float output[], i
     }
 }
 
-void calcAveragesIndividual(Respondent* r, float output[], int output_size) {
-    float averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
+void calcAveragesIndividual(Respondent* r, double output[], int output_size) {
+    double averages[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     int counts[MAX_CATEGORY_AMOUNT] = {0}; // initialize to zero
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (r->answers[i] == NULL) {
