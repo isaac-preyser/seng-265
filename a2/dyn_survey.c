@@ -18,6 +18,12 @@
 //6. free all memory.
 
 
+//future improvements:
+//1. refactor question/options/answer option intake to allow for flexible array sizes. 
+//2. refactor filtering logic to allow for more than 3 types of filters.
+//3. implement realloc() for the response array to allow for more than 100 responses.
+
+
 int main(){
     int* control_bits = getControlBits();
     //print out control bits for debug.
