@@ -2,3 +2,5 @@ a1/survey
 *.o 
 *.class
 .vscode
+a2/dyn_survey
+
