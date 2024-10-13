@@ -8,11 +8,14 @@
 #define MAX_RESPONSE_AMOUNT 50
 #define MAX_LIKERT_AMOUNT 6 // 6 likert options. 
 #define MAX_CATEGORY_AMOUNT 5 // 5 categories- C, I, G, U, P.
+#define MAX_FILTER_AMOUNT 10 //max of 10 filters permitted. 
 
 //a2 TODOS: 
-// convert all static arrays to dynamic arrays using realloc(). 
+// convert all static arrays to dynamic arrays using realloc(). - do this last, as it doesn't seem to be necessary to make all tests pass. 
 // figure out some way to keep track of how many times we have expanded our array. 
-// convert Responses[] array to a Response* [] array (to be more flexible with how memory is allocated.)
+
+
+// convert Responses[] array to a Response* [] array (to be more flexible with how memory is allocated.) - DONE
 // write a function to parse filtering terms, and perform control logic in the output. 
 //  
 
@@ -35,9 +38,16 @@ typedef struct {
 typedef struct {
     char* major;
     int yes_no; // 0 or 1 (boolean)
-    int dob[2]; // [0] = year, [1] = month, [2] = day.
+    int dob[3]; // [0] = year, [1] = month, [2] = day.
     Answer* answers[MAX_QUESTION_AMOUNT]; 
 } Response; 
+
+typedef struct {
+    char* major;
+    int yes_no; // 0 or 1 (boolean)
+    int age[2]; //age[0] = min age, age[1] = max age.
+    int type; //0 = major, 1 = yes_no, 2 = age.
+} Filter; 
 
 //plan: 
 //NOTE: everything comes piped in from stdin and all output is piped to stdout.
@@ -204,6 +214,135 @@ Answer* constructAnswer(char* answer, Question* corresponding_question) {
     return a;
 }
 
+//filtering functions
+Filter* constructFilter(char* line) {
+    Filter* f = (Filter *)malloc(sizeof(Filter));
+    if (f == NULL) {
+        fprintf(stderr, "Memory allocation failed (Filter* constructFilter, allocating space for new Filter f)\n");
+        exit(1);
+    }
+
+    char* token = strtok(line, ",\n");
+    //first token is the type of filter.
+    f->type = atoi(token);
+
+    switch(f->type){
+        case 0:
+            //major filter
+            token = strtok(NULL, ",\n");
+            f->major = (char *)malloc(strlen(token) + 1);
+            if (f->major == NULL) {
+                fprintf(stderr, "Memory allocation failed (Filter* constructFilter, allocating space for f->major)\n");
+                exit(1);
+            }
+            strcpy(f->major, token);
+            break;
+        case 1:
+            //yes_no filter
+            token = strtok(NULL, ",\n");
+            f->yes_no = (strcmp(token, "yes") == 0) ? 1 : 0;
+            break;
+        case 2:
+            //age filter
+            token = strtok(NULL, ",\n");
+            f->age[0] = atoi(token);
+            token = strtok(NULL, ",\n");
+            f->age[1] = atoi(token);
+            break;
+        default:
+            fprintf(stderr, "Invalid filter type. Exiting.\n");
+            exit(1);
+    }
+
+    return f;
+}
+
+
+int getFilters(Filter** filters) {
+    if (filters == NULL) {
+        fprintf(stderr, "Memory allocation failed (Filter** getFilters, allocating space for filters)\n");
+        exit(1);
+    }
+
+    char line[MAX_LINE_LENGTH];
+    int i = 0;
+    while (fgets(line, MAX_LINE_LENGTH, stdin) != NULL) {
+        if (line[0] == '#') {
+            continue;
+        }
+
+        filters[i] = constructFilter(line);
+        i++;
+    }
+
+    // null-terminate the rest of the array
+    for (int j = i; j < MAX_FILTER_AMOUNT; j++) {
+        filters[j] = NULL;
+    }
+
+    return i;
+}
+
+int getFilteredResponses(Response* responses[], int response_count, Response* filtered_responses[], Filter** filters, int filter_count) {
+    //PLAN: 
+    //for each response, check if it passes all filters.
+    //if it does, add it to the filtered_responses array.
+    //return the number of filtered responses.
+    int filtered_count = 0;
+    for (int i = 0; i < response_count; i++) {
+        int passed_all_filters = 1;
+        for (int j = 0; j < filter_count; j++) {
+            switch(filters[j]->type){
+                case 0:
+                    //major filter
+                    if (strcmp(responses[i]->major, filters[j]->major) != 0) {
+                        passed_all_filters = 0;
+                    }
+                    break;
+                case 1:
+                    //yes_no filter
+                    if (responses[i]->yes_no != filters[j]->yes_no) {
+                        passed_all_filters = 0;
+                    }
+                    break;
+                case 2:
+                    //age filter
+                    //first, calculate the respondent's age. 
+
+                    // hard-coded current date (probably not the best way to do this, but it's fine for now)
+                    int current_year = 2024;
+                    int current_month = 10;
+                    int current_day = 12;
+
+                    int age = current_year - responses[i]->dob[0];
+
+                    if (current_month < responses[i]->dob[1] || (current_month == responses[i]->dob[1] && current_day < responses[i]->dob[2])) {
+                        age--;
+                    }
+
+                    //check if the age is within the filter's range.
+                    if (age < filters[j]->age[0] || age > filters[j]->age[1]) {
+                        passed_all_filters = 0;
+                    }
+
+                    break;
+                default:
+                    fprintf(stderr, "Invalid filter type. Exiting.\n");
+                    exit(1);
+            }
+        }
+        if (passed_all_filters) {
+            filtered_responses[filtered_count] = responses[i];
+            filtered_count++;
+        }
+    }
+    return filtered_count;
+}
+    
+
+
+
+
 // parsing functions
 void parseMajor(char* token, Response* r) {
     if (token) {
@@ -253,7 +392,6 @@ void parseAnswers(Response* r, Question* question_bank[]) {
 }
 
 
-//this function should be refactored to return type Response*, rather than Response, to save memory
 Response* getNextResponse(Question* question_bank[]) {
     Response* r = NULL;  // zero-initialize all fields
     r = (Response *)malloc(sizeof(Response));
@@ -282,6 +420,7 @@ Response* getNextResponse(Question* question_bank[]) {
 
     return r;
 }
+
 
 //calculation and output functions
 
@@ -515,8 +654,30 @@ void freeResponse(Response* r) {
     }
 }
 
+void freeResponses(Response** responses, int response_count) {
+    if (responses == NULL) return; // check if responses is NULL
+    for (int i = 0; i < response_count; i++) {
+        freeResponse(responses[i]);
+        free(responses[i]);
+        responses[i] = NULL; // set to NULL to prevent double freeing
+    }
+}
+
+void freeFilters(Filter** filters) {
+    if (filters == NULL) return; // check if filters is NULL
+    for (int i = 0; i < MAX_FILTER_AMOUNT; i++) {
+        if (filters[i] != NULL) {
+            free(filters[i]->major);
+            free(filters[i]);
+            filters[i] = NULL; // set to NULL to prevent double freeing
+        }
+    }
+}
+
 int main(){
     int* control_bits = getControlBits();
+    //print out control bits for debug.
+    //printf("Control Bits: %d, %d, %d\n", control_bits[0], control_bits[1], control_bits[2]);
     char* questions[MAX_QUESTION_AMOUNT];
     char* question_opts[MAX_QUESTION_AMOUNT]; 
     char* likert_options[MAX_LIKERT_AMOUNT];
@@ -585,19 +746,58 @@ int main(){
     // }
 
 
+    //next, filtering logic must be applied. 
+    //there are three types of logic: 
+    //0. Major- filter by major, including only responses with a matching major. 
+    //1. Citizenship (yes/no) - include responses only with a positive yes/no answer.
+    //2. Age - include responses from those within a given age range of [min, max].
+
+    //STEPS 
+    //1. read the filtering terms from stdin, which will be in string format (1 filter per line).
+    //2. parse the filtering terms, and apply the logic to the responses.
+    //2a. keep track of how many responses are included in the filtered array, as this will be used in the output. 
+    //3. create a "filtered" array of responses, including only those that meet the filtering criteria. (if there's no criteria, add all responses to the filtered array.)
+    //4. output the results by passing the filtered array to the output functions.
+
+
+    Filter** filters = (Filter **)malloc(sizeof(Filter *) * MAX_FILTER_AMOUNT);
+    int filter_count = getFilters(filters); //fills array, returns number of filters.
+    //print out the filters for debug.
+    // for (int i = 0; i < MAX_FILTER_AMOUNT; i++) {
+    //     if (filters[i] == NULL) {
+    //         break;
+    //     }
+    //     switch(filters[i]->type) {
+    //         case 0:
+    //             printf("Major: %s\n", filters[i]->major);
+    //             break;
+    //         case 1:
+    //             printf("Yes/No: %s\n", filters[i]->yes_no ? "yes" : "no");
+    //             break;
+    //         case 2:
+    //             printf("Age: %d-%d\n", filters[i]->age[0], filters[i]->age[1]);
+    //             break;
+    //     }
+    // }
+
+    //perform filter logic. 
+
+    Response** filtered_responses = malloc(sizeof(Response*) * response_count);
+    int filtered_responses_count = getFilteredResponses(responses, response_count, filtered_responses, filters, filter_count); //fill the filtered_responses array with the filtered responses, and return the number of responses in the filtered array.
+
     //output the results.
     printf("Examining Science and Engineering Students' Attitudes Towards Computer Science\n");
     printf("SURVEY RESPONSE STATISTICS\n\n");
-    printf("NUMBER OF RESPONDENTS: %d\n", response_count);
+    printf("NUMBER OF RESPONDENTS: %d\n", filtered_responses_count);
 
     if(control_bits[0] == 1){
-       outputPercentages(question_bank, responses, response_count, likert_options); 
+       outputPercentages(question_bank, filtered_responses, filtered_responses_count, likert_options); 
+    }
+    if (control_bits[1] == 1) {
+        outputPerRespondentAverages(filtered_responses, filtered_responses_count);
     }
     if (control_bits[2] == 1) {
-        outputPerRespondentAverages(responses, response_count);
-    }
-    if (control_bits[3] == 1) {
-        outputAverages(responses, response_count);  
+        outputAverages(filtered_responses, filtered_responses_count);  
     }
     
 
@@ -609,8 +809,8 @@ int main(){
     freeStringArray(question_opts, MAX_QUESTION_AMOUNT);
     freeStringArray(likert_options, MAX_LIKERT_AMOUNT);
     freeQuestionBank(question_bank, question_count);
-    for (int i = 0; i < response_count; i++) {
-        freeResponse(responses[i]); // responses[i] is valid as long as responses[i] is not NULL
-    }
+    freeResponses(responses, response_count);
+    freeFilters(filters);
+    free(filtered_responses); //no need to free the responses again, they should be freed already above. 
     return 0; 
 }
