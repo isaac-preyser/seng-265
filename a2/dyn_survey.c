@@ -28,9 +28,9 @@ int main(){
     int* control_bits = getControlBits();
     //print out control bits for debug.
     //printf("Control Bits: %d, %d, %d\n", control_bits[0], control_bits[1], control_bits[2]);
-    char* questions[MAX_QUESTION_AMOUNT];
-    char* question_opts[MAX_QUESTION_AMOUNT]; 
-    char* likert_options[MAX_LIKERT_AMOUNT];
+    char* questions[MAX_QUESTION_AMOUNT]; //number of questions never changes, so we can use a fixed size array.
+    char* question_opts[MAX_QUESTION_AMOUNT]; //number of question options never changes, so we can use a fixed size array.
+    char* likert_options[MAX_LIKERT_AMOUNT]; //number of likert options never changes, so we can use a fixed size array.
     
     getQuestions(questions);
     getQuestionOptions(question_opts);
@@ -42,13 +42,13 @@ int main(){
     // }
 
     //now we can make + populate the questions array. 
-    Question* question_bank[MAX_QUESTION_AMOUNT];
+    Question* question_bank[MAX_QUESTION_AMOUNT]; //number of questions never changes, so we can use a fixed size array.
     int question_count = 0;
     for (int i = 0; i < MAX_QUESTION_AMOUNT; i++) {
         if (questions[i] == NULL) {
             question_count = i;
             break;
-        }
+        }   
         question_bank[i] = constructQuestion(questions[i], question_opts[i]);
     }
 
