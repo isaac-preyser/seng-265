@@ -51,5 +51,16 @@ class Controller:
                 return patient
         print('Patient not found.')
         return None
-        
+    
+    #this function returns a list of patients that have names that contain the supplied substring (search_term)
+    def retrieve_patients(self, search_term):
+        if self.locked:
+            print('You must be logged in to retrieve patients.')
+            return None
+        results = []
+        for patient in self.patients:
+            if search_term in patient.name:
+                results.append(patient)
+        return results
+
     
