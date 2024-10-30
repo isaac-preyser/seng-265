@@ -7,6 +7,7 @@ class Controller:
         #user/password for login. consider changing the init function to take arguments to do a constructor here. 
         self.password = 'clinic2024' #default password  
         self.user = 'user' #default user
+        self.current_patient = None #this is used to store the patient that is currently being worked on.
 
     def logout(self):
         if self.locked:
@@ -81,6 +82,11 @@ class Controller:
             print('Patient not found.')
             return False
         
+        if patient_to_update == self.current_patient:
+            #cannot update the current patient.
+            print('Cannot update the current patient.')
+            return False
+
         for patient in self.patients:
             if patient.phn == new_phn and patient.phn != phn:
                 print('Patient with new PHN already exists. Cannot update.')
@@ -112,6 +118,10 @@ class Controller:
             #if there are no patients, there is nothing to delete.
             print('No patients to delete.')
             return False
+        if self.current_patient and self.current_patient.phn == phn:
+            print('Cannot delete the current patient.')
+            return False
+        
         
         for patient in self.patients:
             if patient.phn == phn:
@@ -120,3 +130,34 @@ class Controller:
                 return True
         print('Patient not found.')
         return False
+    
+    def get_current_patient(self):
+        if self.locked:
+            print('You must be logged in to get the current patient.')
+            return None
+        return self.current_patient
+    
+    def set_current_patient(self, phn):
+        if self.locked:
+            print('You must be logged in to set the current patient.')
+            return False
+            
+        # check if the patient exists in the list of patients (this is done via PHN).
+        for patient in self.patients:
+            if patient.phn == phn:
+                self.current_patient = patient
+                print('Current patient set.')
+                return True
+        print('Patient not found.')
+        return False
+
+    
+    
+    def unset_current_patient(self):
+        if self.locked:
+            print('You must be logged in to unset the current patient.')
+            return False
+        self.current_patient = None
+        return True
+    
+  
