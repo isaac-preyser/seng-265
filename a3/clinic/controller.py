@@ -94,3 +94,29 @@ class Controller:
         patient_to_update.address = address
         print('Patient updated.')
         return True
+    
+    def list_patients(self):
+        if self.locked:
+            print('You must be logged in to list patients.')
+            return None
+        #print('Patients:')
+        # for patient in self.patients:
+        #     print(patient.name)
+        return self.patients #returns a list of patients.
+    
+    def delete_patient(self, phn):
+        if self.locked:
+            print('You must be logged in to delete a patient.')
+            return False
+        if not self.patients:
+            #if there are no patients, there is nothing to delete.
+            print('No patients to delete.')
+            return False
+        
+        for patient in self.patients:
+            if patient.phn == phn:
+                self.patients.remove(patient)
+                print('Patient deleted.')
+                return True
+        print('Patient not found.')
+        return False
