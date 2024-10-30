@@ -63,4 +63,34 @@ class Controller:
                 results.append(patient)
         return results
 
-    
+    def update_patient(self, phn, new_phn, name, birth_date, phone, email, address):
+        if self.locked:
+            print('You must be logged in to update a patient.')
+            return False
+        if not self.patients:
+            print('No patients to update.')
+            return False
+        
+        patient_to_update = None
+        for patient in self.patients:
+            if patient.phn == phn:
+                patient_to_update = patient
+                break
+        
+        if not patient_to_update:
+            print('Patient not found.')
+            return False
+        
+        for patient in self.patients:
+            if patient.phn == new_phn and patient.phn != phn:
+                print('Patient with new PHN already exists. Cannot update.')
+                return False
+        
+        patient_to_update.phn = new_phn
+        patient_to_update.name = name
+        patient_to_update.birth_date = birth_date
+        patient_to_update.phone = phone
+        patient_to_update.email = email
+        patient_to_update.address = address
+        print('Patient updated.')
+        return True
