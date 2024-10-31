@@ -230,3 +230,19 @@ class Controller:
                 return True
         print('Note not found.')
         return False
+    
+    #lists notes for the current patient.
+    def list_notes(self):
+        if self.locked:
+            print('You must be logged in to list notes.')
+            return None
+        if not self.current_patient:
+            print('No current patient set.')
+            return None
+        print("Listing notes:")
+        notes = self.current_patient.record.notes
+        #sort the notes by timestamp in descending order, such that the most recent notes are listed first. 
+        sorted_notes = sorted(notes, key=lambda note: note.timestamp, reverse=True)
+        for note in sorted_notes:
+            print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
+        return sorted_notes
