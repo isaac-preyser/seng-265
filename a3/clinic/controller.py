@@ -214,3 +214,19 @@ class Controller:
                 return True
         print('Note not found.')
         return False
+    
+    #removes a note with a supplied code.
+    def delete_note(self, code):
+        if self.locked:
+            print('You must be logged in to delete a note.')
+            return False
+        if not self.current_patient:
+            print('No current patient set.')
+            return False
+        for note in self.current_patient.record.notes:
+            if note.code == code:
+                self.current_patient.record.remove_note(note)
+                print('Note deleted.')
+                return True
+        print('Note not found.')
+        return False
