@@ -160,4 +160,31 @@ class Controller:
         self.current_patient = None
         return True
     
+    def create_note(self, text):
+        if self.locked:
+            print('You must be logged in to create a note.')
+            return None
+        if not self.current_patient:
+            print('No current patient set.')
+            return None
+        #create a note and add it to the patient record (via the patient record)
+        note = self.current_patient.record.add_note(text)
+        print('Note created.')
+        print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
+        return note
+    
+    def search_note(self, code):
+        if self.locked:
+            print('You must be logged in to search for a note.')
+            return None
+        if not self.current_patient:
+            print('No current patient set.')
+            return None
+        for note in self.current_patient.record.notes:
+            if note.code == code:
+                print('Note found.')
+                return note
+        print('Note not found.')
+        return None
+    
   
