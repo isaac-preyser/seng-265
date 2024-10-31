@@ -187,4 +187,14 @@ class Controller:
         print('Note not found.')
         return None
     
-  
+
+    #if one of the patient's notes contains the supplied substring, add it to the results list, and return it. 
+    def retrieve_notes(self, search_term):
+        if self.locked:
+            print('You must be logged in to retrieve notes.')
+            return None
+        if not self.current_patient:
+            print('No current patient set.')
+            return None
+        
+        return self.current_patient.search_notes(search_term)
