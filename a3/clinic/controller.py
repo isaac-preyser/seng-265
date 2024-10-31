@@ -198,3 +198,19 @@ class Controller:
             return None
         
         return self.current_patient.search_notes(search_term)
+    
+    #updates a note with a supplied code, and a new text.
+    def update_note(self, code, text):
+        if self.locked:
+            print('You must be logged in to update a note.')
+            return False
+        if not self.current_patient:
+            print('No current patient set.')
+            return False
+        for note in self.current_patient.record.notes:
+            if note.code == code:
+                note.text = text
+                print('Note updated.')
+                return True
+        print('Note not found.')
+        return False

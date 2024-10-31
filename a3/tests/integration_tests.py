@@ -456,6 +456,8 @@ class IntegrationTests(TestCase):
 		# You should check that manually.
 		# some parts of code are not simple to test. How can anyone fix that in general?
 
+		#test on an interval, where the tolerance can be shifted to isolate/include certain behaviours
+
 		# update another existing note
 		self.assertTrue(self.controller.update_note(5, "Patient says high BP is controlled, 120x80 every morning."), 
 			"update patient record's note")
