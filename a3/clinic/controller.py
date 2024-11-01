@@ -39,7 +39,7 @@ class Controller:
                 print('Patient already exists.')
                 return None #this nehavior might not be desirable.
         self.patients.append(new_patient)
-        print('Patient created.')
+        print(f'Patient created: {new_patient.name} - {new_patient.phn}')
         return new_patient
     
     def search_patient(self, phn):
@@ -48,7 +48,7 @@ class Controller:
             return None
         for patient in self.patients:
             if patient.phn == phn:
-                print('Patient found.')
+                print(f'Patient found: {patient.name} - {patient.phn}')
                 return patient
         print('Patient not found.')
         return None
@@ -62,36 +62,43 @@ class Controller:
         for patient in self.patients:
             if search_term in patient.name:
                 results.append(patient)
+        print(f'{len(results)} patients found.')
         return results
 
+    #update a patient's information, given an existing PHN and new user information. 
     def update_patient(self, phn, new_phn, name, birth_date, phone, email, address):
+        #cannot update a patient if the controller is locked.
         if self.locked:
             print('You must be logged in to update a patient.')
             return False
+        #if there are no patients, there is nothing to update.
         if not self.patients:
             print('No patients to update.')
             return False
-        
+        #if the current patient is the one being updated, we cannot update.
+        #(if we have a current_patient, and the PHN is the same, we cannot update)
+        if self.current_patient and self.current_patient.phn == phn:
+            print('Cannot update the current patient.')
+            return False
+
+        #now we can search for patient with the supplied PHN.
         patient_to_update = None
         for patient in self.patients:
             if patient.phn == phn:
                 patient_to_update = patient
                 break
-        
+        #if the patient is not found, we cannot update.
         if not patient_to_update:
             print('Patient not found.')
             return False
-        
-        if patient_to_update == self.current_patient:
-            #cannot update the current patient.
-            print('Cannot update the current patient.')
-            return False
 
+        #check if the new PHN is already in use by another patient.
         for patient in self.patients:
             if patient.phn == new_phn and patient.phn != phn:
                 print('Patient with new PHN already exists. Cannot update.')
                 return False
         
+        #if we get through all the checks, we can update the patient's information.
         patient_to_update.phn = new_phn
         patient_to_update.name = name
         patient_to_update.birth_date = birth_date
@@ -101,6 +108,7 @@ class Controller:
         print('Patient updated.')
         return True
     
+        
     def list_patients(self):
         if self.locked:
             print('You must be logged in to list patients.')
@@ -178,11 +186,11 @@ class Controller:
             print('You must be logged in to search for a note.')
             return None
         if not self.current_patient:
-            print('No current patient set.')
+            print('No current passertTrueatient set.')
             return None
         for note in self.current_patient.record.notes:
             if note.code == code:
-                print('Note found.')
+                print(f'Note found: "{note.text}" Time: {note.timestamp}')
                 return note
         print('Note not found.')
         return None
@@ -226,7 +234,7 @@ class Controller:
         for note in self.current_patient.record.notes:
             if note.code == code:
                 self.current_patient.record.remove_note(note)
-                print('Note deleted.')
+                print(f'Note {note.code} deleted.')
                 return True
         print('Note not found.')
         return False
