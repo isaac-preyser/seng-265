@@ -75,7 +75,7 @@ class TestPatient(unittest.TestCase):
         self.assertTrue(result)
 
     def test_list_all_notes(self):
-        notes = self.patient.list_notes()
+        notes = self.patient.record.notes
         self.assertEqual(len(notes), 2)
         self.assertEqual(notes[0].text, "First note")
         self.assertEqual(notes[1].text, "Second note")
