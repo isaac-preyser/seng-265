@@ -14,3 +14,7 @@ class Note:
     def __str__(self):
         return f'{self.code} - {self.text} : {self.timestamp}'
     
+    def update(self, text):
+        self.text = text
+        self.timestamp = datetime.datetime.now()
+        return self

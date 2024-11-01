@@ -28,10 +28,15 @@ class Controller:
         print('Invalid password.')
         return False
     
-    def create_patient(self, phn, name, birth_date, phone, email, address):
+    def check_login(self, action):
         if self.locked:
-            print('You must be logged in to create a patient.')
-            return None #no operation performed. 
+            print(f'You must be logged in to {action}.')
+            return False
+        return True
+    
+    def create_patient(self, phn, name, birth_date, phone, email, address):
+        if not self.check_login('create a patient'):
+            return None
         #make a new patient object
         new_patient = Patient(phn, name, birth_date, phone, email, address)
         for patient in self.patients:
@@ -43,8 +48,7 @@ class Controller:
         return new_patient
     
     def search_patient(self, phn):
-        if self.locked:
-            print('You must be logged in to search for a patient.')
+        if not self.check_login('search for a patient'):
             return None
         for patient in self.patients:
             if patient.phn == phn:
@@ -55,8 +59,7 @@ class Controller:
     
     #this function returns a list of patients that have names that contain the supplied substring (search_term)
     def retrieve_patients(self, search_term):
-        if self.locked:
-            print('You must be logged in to retrieve patients.')
+        if not self.check_login('retrieve patients'):
             return None
         results = []
         for patient in self.patients:
@@ -68,8 +71,7 @@ class Controller:
     #update a patient's information, given an existing PHN and new user information. 
     def update_patient(self, phn, new_phn, name, birth_date, phone, email, address):
         #cannot update a patient if the controller is locked.
-        if self.locked:
-            print('You must be logged in to update a patient.')
+        if not self.check_login('update a patient'):
             return False
         #if there are no patients, there is nothing to update.
         if not self.patients:
@@ -98,20 +100,13 @@ class Controller:
                 print('Patient with new PHN already exists. Cannot update.')
                 return False
         
-        #if we get through all the checks, we can update the patient's information.
-        patient_to_update.phn = new_phn
-        patient_to_update.name = name
-        patient_to_update.birth_date = birth_date
-        patient_to_update.phone = phone
-        patient_to_update.email = email
-        patient_to_update.address = address
+        patient_to_update.update(new_phn, name, birth_date, phone, email, address)
         print('Patient updated.')
         return True
     
         
     def list_patients(self):
-        if self.locked:
-            print('You must be logged in to list patients.')
+        if not self.check_login('list patients'):
             return None
         #print('Patients:')
         # for patient in self.patients:
@@ -119,8 +114,7 @@ class Controller:
         return self.patients #returns a list of patients.
     
     def delete_patient(self, phn):
-        if self.locked:
-            print('You must be logged in to delete a patient.')
+        if not self.check_login('delete a patient'):
             return False
         if not self.patients:
             #if there are no patients, there is nothing to delete.
@@ -129,8 +123,6 @@ class Controller:
         if self.current_patient and self.current_patient.phn == phn:
             print('Cannot delete the current patient.')
             return False
-        
-        
         for patient in self.patients:
             if patient.phn == phn:
                 self.patients.remove(patient)
@@ -140,14 +132,12 @@ class Controller:
         return False
     
     def get_current_patient(self):
-        if self.locked:
-            print('You must be logged in to get the current patient.')
+        if not self.check_login('get the current patient'):
             return None
         return self.current_patient
     
     def set_current_patient(self, phn):
-        if self.locked:
-            print('You must be logged in to set the current patient.')
+        if not self.check_login('set the current patient'):
             return False
             
         # check if the patient exists in the list of patients (this is done via PHN).
@@ -162,8 +152,7 @@ class Controller:
     
     
     def unset_current_patient(self):
-        if self.locked:
-            print('You must be logged in to unset the current patient.')
+        if not self.check_login('unset the current patient'):
             return False
         self.current_patient = None
         return True
@@ -175,74 +164,62 @@ class Controller:
         if not self.current_patient:
             print('No current patient set.')
             return None
-        #create a note and add it to the patient record (via the patient record)
-        note = self.current_patient.record.add_note(text)
+        #create a note and add it to the patient (via patient -> patient record)
+        note = self.current_patient.add_note(text)
         print('Note created.')
         print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return note
     
     def search_note(self, code):
-        if self.locked:
-            print('You must be logged in to search for a note.')
+        if not self.check_login('search for a note'):
             return None
         if not self.current_patient:
             print('No current passertTrueatient set.')
             return None
-        for note in self.current_patient.record.notes:
-            if note.code == code:
-                print(f'Note found: "{note.text}" Time: {note.timestamp}')
-                return note
+        note = self.current_patient.get_note(code)
+        if note:
+            print(f'Note found: "{note.text}" Time: {note.timestamp}')
+            return note
         print('Note not found.')
         return None
     
 
     #if one of the patient's notes contains the supplied substring, add it to the results list, and return it. 
     def retrieve_notes(self, search_term):
-        if self.locked:
-            print('You must be logged in to retrieve notes.')
+        if not self.check_login('retrieve notes'):
             return None
         if not self.current_patient:
             print('No current patient set.')
             return None
         
-        return self.current_patient.search_notes(search_term)
+        return self.current_patient.retrieve_notes(search_term)
     
     #updates a note with a supplied code, and a new text.
     def update_note(self, code, text):
-        if self.locked:
-            print('You must be logged in to update a note.')
+        if not self.check_login('update a note'):
             return False
         if not self.current_patient:
             print('No current patient set.')
             return False
-        for note in self.current_patient.record.notes:
-            if note.code == code:
-                note.text = text
-                print('Note updated.')
-                return True
+        #update the note via the patient.
+        if self.current_patient.update_note(code, text):
+            print('Note updated.')
+            return True
         print('Note not found.')
         return False
     
     #removes a note with a supplied code.
     def delete_note(self, code):
-        if self.locked:
-            print('You must be logged in to delete a note.')
+        if not self.check_login('delete a note'):
             return False
         if not self.current_patient:
             print('No current patient set.')
-            return False
-        for note in self.current_patient.record.notes:
-            if note.code == code:
-                self.current_patient.record.remove_note(note)
-                print(f'Note {note.code} deleted.')
-                return True
-        print('Note not found.')
-        return False
+            return False  
+        return self.current_patient.delete_note(code) 
     
     #lists notes for the current patient.
     def list_notes(self):
-        if self.locked:
-            print('You must be logged in to list notes.')
+        if not self.check_login('list notes'):
             return None
         if not self.current_patient:
             print('No current patient set.')
