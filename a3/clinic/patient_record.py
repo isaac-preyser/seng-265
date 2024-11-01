@@ -17,7 +17,7 @@ class PatientRecord:
     
     def add_note(self, text) -> Note:
         #create a note object, and add it to the list.
-        print(f'Adding note: {text}') 
+        #print(f'Adding note: {text}') 
         note = Note(self.auto_counter + 1, text) #notes are 1-indexed, while the auto_counter is 0-indexed.
         self.notes.append(note)
         self.auto_counter += 1
@@ -29,7 +29,7 @@ class PatientRecord:
         for note in self.notes:
             if note.code == code:
                 self.notes.remove(note)
-                print(f'Removed {note.code}')
+                #print(f'Removed {note.code}')
                 self.auto_counter -= 1
                 return True
         return False
