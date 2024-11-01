@@ -46,3 +46,7 @@ class Patient:
     
     def delete_note(self, code): 
         return self.record.remove_note(code)    
+    
+    def list_notes(self):
+        return self.record.list_notes()
+    

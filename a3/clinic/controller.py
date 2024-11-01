@@ -144,7 +144,7 @@ class Controller:
         for patient in self.patients:
             if patient.phn == phn:
                 self.current_patient = patient
-                print('Current patient set.')
+                print(f'Current patient set to {self.current_patient.name}.')
                 return True
         print('Patient not found.')
         return False
@@ -166,8 +166,8 @@ class Controller:
             return None
         #create a note and add it to the patient (via patient -> patient record)
         note = self.current_patient.add_note(text)
-        print('Note created.')
-        print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
+        #print('Note created.')
+        #print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return note
     
     def search_note(self, code):
@@ -225,9 +225,4 @@ class Controller:
             print('No current patient set.')
             return None
         print("Listing notes:")
-        notes = self.current_patient.record.notes
-        #sort the notes by timestamp in descending order, such that the most recent notes are listed first. 
-        sorted_notes = sorted(notes, key=lambda note: note.timestamp, reverse=True)
-        for note in sorted_notes:
-            print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
-        return sorted_notes
+        return self.current_patient.list_notes()

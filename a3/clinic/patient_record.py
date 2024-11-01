@@ -13,11 +13,11 @@ class PatientRecord:
     
     def add_note(self, text) -> Note:
         #create a note object, and add it to the list.
-        print(f'Adding note: {text} Current Counter: {self.auto_counter}') 
+        print(f'Adding note: {text}') 
         note = Note(self.auto_counter + 1, text) #notes are 1-indexed, while the auto_counter is 0-indexed.
         self.notes.append(note)
         self.auto_counter += 1
-        print(f'Updated Counter: {self.auto_counter}')
+        #print(f'Updated Counter: {self.auto_counter}')
         return note
 
     #given a code, find and remove a note. 
@@ -36,4 +36,10 @@ class PatientRecord:
                 note.update(text)
                 return True
         return False 
+    def list_notes(self):
+        #sort the notes by timestamp (recent first) and return them.
+        sorted_notes = sorted(self.notes, key=lambda x: x.timestamp, reverse=True)
+        for note in sorted_notes:
+            print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
+        return sorted_notes
     
