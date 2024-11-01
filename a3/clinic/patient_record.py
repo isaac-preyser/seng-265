@@ -9,7 +9,11 @@ class PatientRecord:
         return self.notes == other.notes and self.auto_counter == other.auto_counter
 
     def __str__(self):
-        return f'Patient Record: {self.notes}'    
+        output = 'Patient Record: ['
+        for note in self.notes:
+            output += f'Note {note.code}, text: "{note.text}"'
+        output += ']'
+        return output   
     
     def add_note(self, text) -> Note:
         #create a note object, and add it to the list.
