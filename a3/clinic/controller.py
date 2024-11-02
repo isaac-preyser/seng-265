@@ -178,7 +178,7 @@ class Controller:
         return note
     
     #This function searches for a note (under the current patient) by it's code. (each note should have a unique code.)
-    def search_note(self, code) -> Patient:
+    def search_note(self, code) -> Note:
         if not self.check_login('search for a note'):
             return None
         if not self.current_patient:
