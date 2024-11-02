@@ -35,5 +35,17 @@ class TestNote(unittest.TestCase):
         expected_str = f'{note.code} - {note.text} : {note.timestamp}'
         self.assertEqual(str(note), expected_str)
 
+    def test_note_update(self):
+        note = Note("001", "Test note")
+        old_timestamp = note.timestamp
+        note.update("Updated note")
+        self.assertEqual(note.text, "Updated note")
+        self.assertNotEqual(note.timestamp, old_timestamp)
+
+    def test_note_update_code_unchanged(self):
+        note = Note("001", "Test note")
+        note.update("Updated note")
+        self.assertEqual(note.code, "001")
+
 if __name__ == '__main__':
     unittest.main()

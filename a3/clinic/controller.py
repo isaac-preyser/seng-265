@@ -1,3 +1,4 @@
+from clinic.note import Note
 from clinic.patient import Patient
 
 class Controller: 
@@ -9,7 +10,7 @@ class Controller:
         self.user = 'user' #default user
         self.current_patient = None #this is used to store the patient that is currently being worked on.
 
-    def logout(self):
+    def logout(self) -> bool:
         if self.locked:
             print('You are already logged out.') #not sure if this is necessary
             return False
@@ -17,7 +18,7 @@ class Controller:
         print('You have been logged out.')
         return True
     
-    def login(self, user, password):
+    def login(self, user, password) -> bool:
         if not self.locked:
             print('You are already logged in.')
             return False
@@ -28,13 +29,15 @@ class Controller:
         print('Invalid password.')
         return False
     
-    def check_login(self, action):
+    #generic function to check if the controller is locked.
+    def check_login(self, action) -> bool:
         if self.locked:
             print(f'You must be logged in to {action}.')
             return False
         return True
     
-    def create_patient(self, phn, name, birth_date, phone, email, address):
+    #create a patient with the supplied information.
+    def create_patient(self, phn, name, birth_date, phone, email, address) -> Patient:
         if not self.check_login('create a patient'):
             return None
         #make a new patient object
@@ -58,7 +61,7 @@ class Controller:
         return None
     
     #this function returns a list of patients that have names that contain the supplied substring (search_term)
-    def retrieve_patients(self, search_term):
+    def retrieve_patients(self, search_term) -> list[Patient]:
         if not self.check_login('retrieve patients'):
             return None
         results = []
@@ -69,7 +72,7 @@ class Controller:
         return results
 
     #update a patient's information, given an existing PHN and new user information. 
-    def update_patient(self, phn, new_phn, name, birth_date, phone, email, address):
+    def update_patient(self, phn, new_phn, name, birth_date, phone, email, address) -> bool:
         #cannot update a patient if the controller is locked.
         if not self.check_login('update a patient'):
             return False
@@ -104,8 +107,8 @@ class Controller:
         print('Patient updated.')
         return True
     
-        
-    def list_patients(self):
+    #list all patients in the controller.    
+    def list_patients(self) -> list[Patient]:
         if not self.check_login('list patients'):
             return None
         #print('Patients:')
@@ -113,7 +116,8 @@ class Controller:
         #     print(patient.name)
         return self.patients #returns a list of patients.
     
-    def delete_patient(self, phn):
+    #delete a patient with the supplied PHN.
+    def delete_patient(self, phn) -> bool:
         if not self.check_login('delete a patient'):
             return False
         if not self.patients:
@@ -131,12 +135,14 @@ class Controller:
         print('Patient not found.')
         return False
     
-    def get_current_patient(self):
+    #get the current patient.
+    def get_current_patient(self) -> Patient:
         if not self.check_login('get the current patient'):
             return None
         return self.current_patient
     
-    def set_current_patient(self, phn):
+    #set the current patient to the patient with the supplied PHN.
+    def set_current_patient(self, phn) -> bool:
         if not self.check_login('set the current patient'):
             return False
             
@@ -150,14 +156,15 @@ class Controller:
         return False
 
     
-    
-    def unset_current_patient(self):
+    #unset the current patient.
+    def unset_current_patient(self) -> bool:
         if not self.check_login('unset the current patient'):
             return False
         self.current_patient = None
         return True
     
-    def create_note(self, text):
+    #create a note for the current patient.
+    def create_note(self, text) -> Note:
         if self.locked:
             print('You must be logged in to create a note.')
             return None
@@ -170,11 +177,12 @@ class Controller:
         #print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return note
     
-    def search_note(self, code):
+    #This function searches for a note (under the current patient) by it's code. (each note should have a unique code.)
+    def search_note(self, code) -> Patient:
         if not self.check_login('search for a note'):
             return None
         if not self.current_patient:
-            print('No current passertTrueatient set.')
+            print('No current patient set, set a current patient before searching for a note.')  
             return None
         note = self.current_patient.get_note(code)
         if note:
@@ -185,7 +193,7 @@ class Controller:
     
 
     #if one of the patient's notes contains the supplied substring, add it to the results list, and return it. 
-    def retrieve_notes(self, search_term):
+    def retrieve_notes(self, search_term) -> list[Note]:
         if not self.check_login('retrieve notes'):
             return None
         if not self.current_patient:
@@ -195,7 +203,7 @@ class Controller:
         return self.current_patient.retrieve_notes(search_term)
     
     #updates a note with a supplied code, and a new text.
-    def update_note(self, code, text):
+    def update_note(self, code, text) -> bool:
         if not self.check_login('update a note'):
             return False
         if not self.current_patient:
@@ -209,7 +217,7 @@ class Controller:
         return False
     
     #removes a note with a supplied code.
-    def delete_note(self, code):
+    def delete_note(self, code) -> bool:
         if not self.check_login('delete a note'):
             return False
         if not self.current_patient:
@@ -218,7 +226,7 @@ class Controller:
         return self.current_patient.delete_note(code) 
     
     #lists notes for the current patient.
-    def list_notes(self):
+    def list_notes(self) -> list[Note]:
         if not self.check_login('list notes'):
             return None
         if not self.current_patient:

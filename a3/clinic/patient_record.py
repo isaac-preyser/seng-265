@@ -15,6 +15,7 @@ class PatientRecord:
         output += ']'
         return output   
     
+    #given a code, find and return a note.
     def add_note(self, text) -> Note:
         #create a note object, and add it to the list.
         #print(f'Adding note: {text}') 
@@ -25,7 +26,7 @@ class PatientRecord:
         return note
 
     #given a code, find and remove a note. 
-    def remove_note(self, code):
+    def remove_note(self, code) -> bool:
         for note in self.notes:
             if note.code == code:
                 self.notes.remove(note)
@@ -34,15 +35,18 @@ class PatientRecord:
                 return True
         return False
 
-    def update_note(self, code, text):
+    #update a note given a code and new text. (delegate to the note object)
+    def update_note(self, code, text) -> bool:
         for note in self.notes:
             if note.code == code:
                 note.update(text)
                 return True
         return False 
-    def list_notes(self):
+    
+    # sort notes by timestamp and list them.
+    def list_notes(self) -> list[Note]:
         #sort the notes by timestamp (recent first) and return them.
-        sorted_notes = sorted(self.notes, key=lambda x: x.timestamp, reverse=True)
+        sorted_notes = sorted(self.notes, key=lambda x: x.timestamp, reverse=True) #sort by timestamp, most recent first (via lambda function)
         for note in sorted_notes:
             print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return sorted_notes
