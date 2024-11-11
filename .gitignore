@@ -3,4 +3,4 @@ a1/survey
 *.class
 .vscode
 a2/dyn_survey
-
+*.pyc

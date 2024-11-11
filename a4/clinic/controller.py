@@ -1,19 +1,27 @@
 from clinic.note import Note
 from clinic.patient import Patient
+#new functionality: exception handling
+from clinic import exception 
 
 class Controller: 
-    def __init__(self):
+    def __init__(self, autosave = False):
         self.locked = True
         self.patients = []
         #user/password for login. consider changing the init function to take arguments to do a constructor here. 
-        self.password = 'clinic2024' #default password  
-        self.user = 'user' #default user
+        #NEW FUNCTIONALITY: multiple users. 
+        self.users = {'user': '123456', 'ali': '@G00dPassw0rd'}
+        self.current_user = None
         self.current_patient = None #this is used to store the patient that is currently being worked on.
+
+        #NEW FUNCTIONALITY: autosave
+        self.autosave = autosave    
+
+
 
     def logout(self) -> bool:
         if self.locked:
             print('You are already logged out.') #not sure if this is necessary
-            return False
+            raise exception.invalid_logout_exception.InvalidLogoutException('Invalid logout.')
         self.locked = True
         print('You have been logged out.')
         return True
@@ -21,18 +29,21 @@ class Controller:
     def login(self, user, password) -> bool:
         if not self.locked:
             print('You are already logged in.')
-            return False
-        if password == self.password and user == self.user:
+            raise exception.duplicate_login_exception.DuplicateLoginException('Duplicate login.')
+        if user in self.users and self.users[user] == password:
             self.locked = False
+            self.current_user = user 
             print('You have been logged in.')
             return True
         print('Invalid password.')
+        raise exception.invalid_login_exception.InvalidLoginException('Invalid login - invalid password or username.')
         return False
     
     #generic function to check if the controller is locked.
     def check_login(self, action) -> bool:
         if self.locked:
             print(f'You must be logged in to {action}.')
+            raise exception.illegal_access_exception.IllegalAccessException(f'Illegal access. - {action}')
             return False
         return True
     
