@@ -1,6 +1,9 @@
 #new functionality: exception handling
+import hashlib
 import clinic.exception as exception 
 from clinic.dao.patient_dao_json import PatientDAOJSON
+import pickle
+
 
 
 class Controller: 
@@ -13,7 +16,29 @@ class Controller:
         self.current_user = None
         self.current_patient = None #this is used to store the patient that is currently being worked on.
         #NEW FUNCTIONALITY: autosave
-        self.autosave = autosave    
+        self.autosave = autosave
+
+        if self.autosave:
+            self.load_users() #update the users dictionary with the saved users. 
+
+
+    #excerpt from lab09. 
+    def get_password_hash(self, password):
+        # Learn a bit about password hashes by reading this code
+        encoded_password = password.encode('utf-8')     # Convert the password to bytes
+        hash_object = hashlib.sha256(encoded_password)      # Choose a hashing algorithm (e.g., SHA-256)
+        hex_dig = hash_object.hexdigest()       # Get the hexadecimal digest of the hashed password
+        return hex_dig
+
+    def load_users(self):
+        #on each line, there is a username (unencrypted) and a password (encrypted)
+        #we will loop until EOF, and add each user to the users dictionary.
+        with open('clinic/users.txt', 'r') as file:
+            for line in file:
+                user, password_hash = line.strip().split(',')
+                self.users[user] = password_hash
+
+
 
     def logout(self) -> bool:
         if self.locked:
@@ -27,7 +52,7 @@ class Controller:
         if not self.locked:
             print('You are already logged in.')
             raise exception.duplicate_login_exception.DuplicateLoginException('Duplicate login.')
-        if user in self.users and self.users[user] == password:
+        if user in self.users and self.users[user] == self.get_password_hash(password):
             self.locked = False
             self.current_user = user 
             print('You have been logged in.')

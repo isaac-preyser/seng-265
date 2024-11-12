@@ -17,10 +17,10 @@ class IntegrationTest(TestCase):
 
 	def setUp(self):
 		# set autosave to False to avoid testing persistence
-		self.controller = Controller(autosave=False)
+		# self.controller = Controller(autosave=False)
 
 		# set autosave to True to test persistence
-		# self.controller = Controller(autosave=True)
+		self.controller = Controller(autosave=True)
 
 	# comment the tearDown method to see the file when the test ends.
 	def tearDown(self):
