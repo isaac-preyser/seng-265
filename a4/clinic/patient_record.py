@@ -1,8 +1,9 @@
 from clinic.note import Note
+from clinic.dao.note_dao_pickle import NoteDAOPickle
 
 class PatientRecord:
     def __init__(self):
-        self.notes = [] #contains a list of notes. 
+        self.notes = NoteDAOPickle() #list of notes in the record. 
         self.auto_counter = 0 #counts number of notes in the record. 
 
     def __eq__(self, other):
@@ -20,7 +21,7 @@ class PatientRecord:
         #create a note object, and add it to the list.
         #print(f'Adding note: {text}') 
         note = Note(self.auto_counter + 1, text) #notes are 1-indexed, while the auto_counter is 0-indexed.
-        self.notes.append(note)
+        self.notes.notes.append(note)
         self.auto_counter += 1
         #print(f'Updated Counter: {self.auto_counter}')
         return note
@@ -29,7 +30,7 @@ class PatientRecord:
     def remove_note(self, code) -> bool:
         for note in self.notes:
             if note.code == code:
-                self.notes.remove(note)
+                self.notes.delete_note(note.code)
                 #print(f'Removed {note.code}')
                 self.auto_counter -= 1
                 return True
