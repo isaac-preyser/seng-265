@@ -1,2 +1,4 @@
 class IllegalOperationException(Exception):
-	''' Illegal Operation '''
+	def __init__(self, message = 'Illegal operation.'):
+		self.message = message
+		super().__init__(self.message)
