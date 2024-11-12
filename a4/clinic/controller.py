@@ -1,5 +1,5 @@
 #new functionality: exception handling
-from clinic import exception 
+import clinic.exception as exception 
 from clinic.dao.patient_dao_json import PatientDAOJSON
 
 
@@ -68,10 +68,8 @@ class Controller:
     #this function returns a list of patients that have names that contain the supplied substring (search_term)
     def retrieve_patients(self, search_term):
         self.check_login('retrieve patients')
-        results = []
-        for patient in self.patients:
-            if search_term in patient.name:
-                results.append(patient)
+        #delegate to the DAO to get the list of patients.
+        results = self.patients.retrieve_patients(search_term)
         print(f'{len(results)} patients found.')
         return results
 

@@ -1,4 +1,4 @@
-from clinic import exception
+import clinic.exception as exception
 from clinic.dao.patient_dao import PatientDAO
 from clinic.patient import Patient
 
@@ -22,7 +22,7 @@ class PatientDAOJSON(PatientDAO):
 
     def retrieve_patients(self, search_string) -> list[Patient]:
         results = []
-        for patient in self._patients:
+        for patient in self._patients.values():
             if search_string in patient.name:
                 results.append(patient)
         return results

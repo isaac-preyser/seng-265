@@ -38,9 +38,13 @@ class PatientRecord:
     
     # sort notes by timestamp and list them.
     def list_notes(self):
-        #sort the notes by timestamp (recent first) and return them.
+        #sort the notes by timestamp (recent first) and return them. Not sure if I can use dict.values() here.
         sorted_notes = sorted(self.notes, key=lambda x: x.timestamp, reverse=True) #sort by timestamp, most recent first (via lambda function)
         for note in sorted_notes:
             print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return sorted_notes
+    
+    #search for a note with a given search term.
+    def retrieve_notes(self, search_term):
+        return self.notes.retrieve_notes(search_term)
     

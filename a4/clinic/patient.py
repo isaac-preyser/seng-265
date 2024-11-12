@@ -15,11 +15,7 @@ class Patient:
         return self.phn == other.phn and self.name == other.name and self.birth_date == other.birth_date and self.phone == other.phone and self.email == other.email and self.address == other.address and self.record == other.record
     
     def retrieve_notes(self, search_term):
-        results = []
-        for note in self.record.notes:
-            if search_term in note.text:
-                results.append(note)
-        return results
+        return self.record.retrieve_notes(search_term)
     
     def get_note(self, code):
         for note in self.record.notes:

@@ -10,7 +10,7 @@ class NoteDAOPickle(NoteDAO):
         self.notes = {}
 
     
-
+    #allow "list" functionality for the notes object.
     def __iter__(self):
         return iter(self.notes.values())
     

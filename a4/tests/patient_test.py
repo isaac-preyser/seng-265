@@ -20,10 +20,10 @@ class TestPatient(unittest.TestCase):
             code=code, text=text
         )
         self.patient.record.remove_note = lambda code: True
-        self.patient.record.notes = [
-            Note(code="001", text="First note"),
-            Note(code="002", text="Second note")
-        ]
+        self.patient.record.notes.notes = {
+            "001": Note(code="001", text="First note"),
+            "002": Note(code="002", text="Second note")
+        }
 
     def test_update_patient_info(self):
         self.patient.update(
@@ -47,7 +47,7 @@ class TestPatient(unittest.TestCase):
         )
         self.assertEqual(note.text, "This is a new note")
 
-    def test_retrieve_notes(self):
+    def test_retrieve_notes_from_patient_record(self):
         notes = self.patient.retrieve_notes(
             search_term="First"
         )
@@ -76,10 +76,12 @@ class TestPatient(unittest.TestCase):
         self.assertTrue(result)
 
     def test_list_all_notes(self):
-        notes = self.patient.record.notes
+        notes = self.patient.list_notes()
         self.assertEqual(len(notes), 2)
-        self.assertEqual(notes[0].text, "First note")
-        self.assertEqual(notes[1].text, "Second note")
+        self.assertEqual(notes[0].text, "Second note") #most recent note first
+        self.assertEqual(notes[1].text, "First note")
+
+
 
 if __name__ == '__main__':
     unittest.main()
