@@ -4,3 +4,4 @@ a1/survey
 .vscode
 a2/dyn_survey
 *.pyc
+.coverage

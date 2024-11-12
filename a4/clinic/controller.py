@@ -12,7 +12,6 @@ class Controller:
         self.users = {'user': '123456', 'ali': '@G00dPassw0rd'}
         self.current_user = None
         self.current_patient = None #this is used to store the patient that is currently being worked on.
-
         #NEW FUNCTIONALITY: autosave
         self.autosave = autosave    
 
@@ -41,6 +40,12 @@ class Controller:
         if self.locked:
             print(f'You must be logged in to {action}.')
             raise exception.illegal_access_exception.IllegalAccessException(f'Illegal access. - {action}')
+        return True
+    
+    def check_has_current_patient(self, action) -> bool:
+        if not self.current_patient:
+            print(f'You must set a current patient to {action}.')
+            raise exception.no_current_patient_exception.NoCurrentPatientException(f'No current patient set. - {action}')
         return True
     
     #create a patient with the supplied information.
@@ -82,7 +87,7 @@ class Controller:
         #if there are no patients, there is nothing to update.
         if not self.patients:
             print('No patients to update.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No patients to update.')
+            raise exception.illegal_operation_exception.IllegalOperationException('No patients to update.')
         #if the current patient is the one being updated, we cannot update.
         #(if we have a current_patient, and the PHN is the same, we cannot update)
         if self.current_patient and self.current_patient.phn == phn:
@@ -119,9 +124,8 @@ class Controller:
     def delete_patient(self, phn) -> bool:
         self.check_login('delete a patient')
         if not self.patients:
-            #if there are no patients, there is nothing to delete.
             print('No patients to delete.')
-            return False
+            raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - No patients to delete.')
         if self.current_patient and self.current_patient.phn == phn:
             print('Cannot delete the current patient.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - cannot delete the current patient.')
@@ -136,6 +140,7 @@ class Controller:
     #get the current patient.
     def get_current_patient(self) -> Patient:
         self.check_login('get the current patient')
+        #intentionally returning None if there is no current patient, do not throw an exception.
         return self.current_patient
     
     #set the current patient to the patient with the supplied PHN.
@@ -155,19 +160,13 @@ class Controller:
     #unset the current patient.
     def unset_current_patient(self) -> bool:
         self.check_login('unset the current patient')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - no current patient set.')
         self.current_patient = None
         return True
     
     #create a note for the current patient.
     def create_note(self, text) -> Note:
         self.check_login('create a note')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return None
+        self.check_has_current_patient('create a note')
         #create a note and add it to the patient (via patient -> patient record)
         note = self.current_patient.add_note(text)
         return note
@@ -175,49 +174,25 @@ class Controller:
     #This function searches for a note (under the current patient) by it's code. (each note should have a unique code.)
     def search_note(self, code) -> Note:
         self.check_login('search for a note')
-        if not self.current_patient:
-            print('No current patient set, set a current patient before searching for a note.')  
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return None
+        self.check_has_current_patient('search for a note')
         note = self.current_patient.get_note(code)
         if note:
             print(f'Note found: "{note.text}" Time: {note.timestamp}')
             return note
-        print('Note not found.')
-        raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - note not found.')
-        return None
+        print(f'Note (with code {code}) not found.')
+        return None #intentional, do not throw an exception.
     
-
-    # This function searches for a note (under the current patient) by its code. (each note should have a unique code.)
-    def search_note(self, code) -> Note:
-        self.check_login('search for a note')
-        if not self.current_patient:
-            print('No current patient set, set a current patient before searching for a note.')  
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return None
-        note = self.current_patient.get_note(code)
-        if note:
-            print(f'Note found: "{note.text}" Time: {note.timestamp}')
-            return note
-        print('Note not found.')
-        return None
 
     # If one of the patient's notes contains the supplied substring, add it to the results list, and return it.
     def retrieve_notes(self, search_term) -> list[Note]:
         self.check_login('retrieve notes')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return None
+        self.check_has_current_patient('retrieve notes')
         return self.current_patient.retrieve_notes(search_term)
     
     # Updates a note with a supplied code, and a new text.
     def update_note(self, code, text) -> bool:
         self.check_login('update a note')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return False
+        self.check_has_current_patient('update a note')
         # Update the note via the patient.
         if self.current_patient.update_note(code, text):
             print('Note updated.')
@@ -228,18 +203,12 @@ class Controller:
     # Removes a note with a supplied code.
     def delete_note(self, code) -> bool:
         self.check_login('delete a note')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return False  
+        self.check_has_current_patient('delete a note') 
         return self.current_patient.delete_note(code) 
     
     # Lists notes for the current patient.
     def list_notes(self) -> list[Note]:
         self.check_login('list notes')
-        if not self.current_patient:
-            print('No current patient set.')
-            raise exception.no_current_patient_exception.NoCurrentPatientException('No current patient set.')
-            return None
+        self.check_has_current_patient('list notes')
         print("Listing notes:")
         return self.current_patient.list_notes()
