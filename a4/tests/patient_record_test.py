@@ -25,13 +25,14 @@ class TestPatientRecord(unittest.TestCase):
     def test_update_note_success(self):
         self.record.add_note("First note")
         self.assertTrue(self.record.update_note(1, "Updated note"))
-        self.assertEqual(self.record.notes[0].text, "Updated note")
+        self.assertEqual(self.record.notes.search_note(1).text, "Updated note")
 
     def test_update_note_failure(self):
         self.record.add_note("First note")
         self.assertFalse(self.record.update_note(2, "Updated note"))
-        self.assertEqual(self.record.notes[0].text, "First note")
-
+        self.assertEqual(self.record.notes.search_note(1).text, "First note")
+    
+    
     def test_list_notes(self):
         self.record.add_note("First note")
         self.record.add_note("Second note")

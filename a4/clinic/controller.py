@@ -1,12 +1,12 @@
-from clinic.note import Note
-from clinic.patient import Patient
 #new functionality: exception handling
 from clinic import exception 
+from clinic.dao.patient_dao_json import PatientDAOJSON
+
 
 class Controller: 
     def __init__(self, autosave = False):
         self.locked = True
-        self.patients = []
+        self.patients = PatientDAOJSON() #list of patients in the controller.
         #user/password for login. consider changing the init function to take arguments to do a constructor here. 
         #NEW FUNCTIONALITY: multiple users. 
         self.users = {'user': '123456', 'ali': '@G00dPassw0rd'}
@@ -49,17 +49,12 @@ class Controller:
         return True
     
     #create a patient with the supplied information.
-    def create_patient(self, phn, name, birth_date, phone, email, address) -> Patient:
+    def create_patient(self, phn, name, birth_date, phone, email, address):
         self.check_login('create a patient')
-        #make a new patient object
-        new_patient = Patient(phn, name, birth_date, phone, email, address)
-        for patient in self.patients:
-            if patient.phn == new_patient.phn:
-                print('Patient already exists.')
-                raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - patient already exists.')
-        self.patients.append(new_patient)
-        print(f'Patient created: {new_patient.name} - {new_patient.phn}')
-        return new_patient
+        #make a new patient object via the DAO
+        self.patients.create_patient(phn, name, birth_date, phone, email, address)
+        return self.patients.get_patient(phn)
+        
     
     def search_patient(self, phn):
         self.check_login('search for a patient')
@@ -71,7 +66,7 @@ class Controller:
         return None
     
     #this function returns a list of patients that have names that contain the supplied substring (search_term)
-    def retrieve_patients(self, search_term) -> list[Patient]:
+    def retrieve_patients(self, search_term):
         self.check_login('retrieve patients')
         results = []
         for patient in self.patients:
@@ -93,32 +88,14 @@ class Controller:
         if self.current_patient and self.current_patient.phn == phn:
             print('Cannot update the current patient.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - cannot update the current patient. (unset the current patient first)')
-
-        #now we can search for patient with the supplied PHN.
-        patient_to_update = None
-        for patient in self.patients:
-            if patient.phn == phn:
-                patient_to_update = patient
-                break
-        #if the patient is not found, we cannot update.
-        if not patient_to_update:
-            print('Patient not found.')
-            raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - patient not found.')
-
-        #check if the new PHN is already in use by another patient.
-        for patient in self.patients:
-            if patient.phn == new_phn and patient.phn != phn:
-                print('Patient with new PHN already exists. Cannot update.')
-                raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - new PHN already in use.')
-        
-        patient_to_update.update(new_phn, name, birth_date, phone, email, address)
-        print('Patient updated.')
+        #update the patient via the DAO.
+        self.patients.update_patient(phn, new_phn, name, birth_date, phone, email, address)
         return True
     
     #list all patients in the controller.    
-    def list_patients(self) -> list[Patient]:
+    def list_patients(self):
         self.check_login('list patients')
-        return self.patients #returns a list of patients.
+        return self.patients.list_patients()
     
     #delete a patient with the supplied PHN.
     def delete_patient(self, phn) -> bool:
@@ -129,16 +106,12 @@ class Controller:
         if self.current_patient and self.current_patient.phn == phn:
             print('Cannot delete the current patient.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - cannot delete the current patient.')
-        for patient in self.patients:
-            if patient.phn == phn:
-                self.patients.remove(patient)
-                print('Patient deleted.')
-                return True
-        print('Patient not found.')
-        raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - patient not found.')
+        #immediately delegate to the DAO. 
+        return self.patients.delete_patient(phn)
     
+
     #get the current patient.
-    def get_current_patient(self) -> Patient:
+    def get_current_patient(self):
         self.check_login('get the current patient')
         #intentionally returning None if there is no current patient, do not throw an exception.
         return self.current_patient
@@ -146,13 +119,10 @@ class Controller:
     #set the current patient to the patient with the supplied PHN.
     def set_current_patient(self, phn) -> bool:
         self.check_login('set the current patient')
-            
-        # check if the patient exists in the list of patients (this is done via PHN).
-        for patient in self.patients:
-            if patient.phn == phn:
-                self.current_patient = patient
-                print(f'Current patient set to {self.current_patient.name}.')
-                return True
+        patient = self.search_patient(phn)
+        if patient:
+            self.current_patient = patient
+            return True
         print('Patient not found.')
         raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - patient not found.')
 
@@ -164,7 +134,7 @@ class Controller:
         return True
     
     #create a note for the current patient.
-    def create_note(self, text) -> Note:
+    def create_note(self, text):
         self.check_login('create a note')
         self.check_has_current_patient('create a note')
         #create a note and add it to the patient (via patient -> patient record)
@@ -172,7 +142,7 @@ class Controller:
         return note
     
     #This function searches for a note (under the current patient) by it's code. (each note should have a unique code.)
-    def search_note(self, code) -> Note:
+    def search_note(self, code):
         self.check_login('search for a note')
         self.check_has_current_patient('search for a note')
         note = self.current_patient.get_note(code)
@@ -184,7 +154,7 @@ class Controller:
     
 
     # If one of the patient's notes contains the supplied substring, add it to the results list, and return it.
-    def retrieve_notes(self, search_term) -> list[Note]:
+    def retrieve_notes(self, search_term):
         self.check_login('retrieve notes')
         self.check_has_current_patient('retrieve notes')
         return self.current_patient.retrieve_notes(search_term)
@@ -207,7 +177,7 @@ class Controller:
         return self.current_patient.delete_note(code) 
     
     # Lists notes for the current patient.
-    def list_notes(self) -> list[Note]:
+    def list_notes(self):
         self.check_login('list notes')
         self.check_has_current_patient('list notes')
         print("Listing notes:")

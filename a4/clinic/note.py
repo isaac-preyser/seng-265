@@ -19,3 +19,7 @@ class Note:
         self.text = text
         self.timestamp = datetime.datetime.now()
         return self
+    
+    def create(code, text):
+        return Note(code, text)
+    

@@ -7,46 +7,45 @@ class NoteDAOPickle(NoteDAO):
             return False
         return self.notes == other.notes
     def __init__(self):
-        self.notes = []
+        self.notes = {}
 
-    def __getitem__(self, index):
-        return self.notes[index]
+    
 
     def __iter__(self):
-        return iter(self.notes)
+        return iter(self.notes.values())
     
     def __len__(self):
         return len(self.notes)
     
     def search_note(self, code):
-        for note in self.notes:
-            if note.code == code:
-                return note
+        if code in self.notes:
+            return self.notes[code]
         return None
     
-    def create_note(self, text):
-        note = Note.create(text)
-        self.notes.append(note)
+    def create_note(self, code, text):
+        note = Note.create(code, text)
+        self.notes[code] = note
         return note
     
     def retrieve_notes(self, search_string):
         results = []
-        for note in self.notes:
+        for note in self.notes.values():
             if search_string in note.text:
                 results.append(note)
         return results
     
     def update_note(self, code, text):
-        for i, note in enumerate(self.notes):
-            if note.code == code:
-                self.notes[i] = note.update(text)
-                return True
+        if code in self.notes:
+            self.notes[code].update(text)
+            return True
         return False
     
     def delete_note(self, code):
-        self.notes = [note for note in self.notes if note.code != code]
-        return True
+        if code in self.notes:
+            del self.notes[code]
+            return True
+        return False
     
     def list_notes(self):
-        return self.notes
+        return list(self.notes.values())    
     

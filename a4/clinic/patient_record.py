@@ -1,4 +1,3 @@
-from clinic.note import Note
 from clinic.dao.note_dao_pickle import NoteDAOPickle
 
 class PatientRecord:
@@ -17,15 +16,12 @@ class PatientRecord:
         return output   
     
     #given a code, find and return a note.
-    def add_note(self, text) -> Note:
+    def add_note(self, text):
         #create a note object, and add it to the list.
-        #print(f'Adding note: {text}') 
-        note = Note(self.auto_counter + 1, text) #notes are 1-indexed, while the auto_counter is 0-indexed.
-        self.notes.notes.append(note)
+        note = self.notes.create_note(self.auto_counter + 1, text)
         self.auto_counter += 1
-        #print(f'Updated Counter: {self.auto_counter}')
         return note
-
+    
     #given a code, find and remove a note. 
     def remove_note(self, code) -> bool:
         for note in self.notes:
@@ -38,14 +34,10 @@ class PatientRecord:
 
     #update a note given a code and new text. (delegate to the note object)
     def update_note(self, code, text) -> bool:
-        for note in self.notes:
-            if note.code == code:
-                note.update(text)
-                return True
-        return False 
+        return self.notes.update_note(code, text)
     
     # sort notes by timestamp and list them.
-    def list_notes(self) -> list[Note]:
+    def list_notes(self):
         #sort the notes by timestamp (recent first) and return them.
         sorted_notes = sorted(self.notes, key=lambda x: x.timestamp, reverse=True) #sort by timestamp, most recent first (via lambda function)
         for note in sorted_notes:

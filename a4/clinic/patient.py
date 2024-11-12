@@ -1,4 +1,3 @@
-from clinic.note import Note
 from clinic.patient_record import PatientRecord
 
 
@@ -15,14 +14,14 @@ class Patient:
     def __eq__(self, other):
         return self.phn == other.phn and self.name == other.name and self.birth_date == other.birth_date and self.phone == other.phone and self.email == other.email and self.address == other.address and self.record == other.record
     
-    def retrieve_notes(self, search_term) -> list[Note]:
+    def retrieve_notes(self, search_term):
         results = []
         for note in self.record.notes:
             if search_term in note.text:
                 results.append(note)
         return results
     
-    def get_note(self, code) -> Note:
+    def get_note(self, code):
         for note in self.record.notes:
             if note.code == code:
                 return note
@@ -42,12 +41,12 @@ class Patient:
         self.address = address
         return self
     
-    def add_note(self, text) -> Note:
+    def add_note(self, text):
         return self.record.add_note(text)
     
     def delete_note(self, code) -> bool: 
         return self.record.remove_note(code)    
     
-    def list_notes(self) -> list[Note]:
+    def list_notes(self):
         return self.record.list_notes()
     

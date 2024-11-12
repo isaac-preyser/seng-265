@@ -1,6 +1,7 @@
 import unittest
 from clinic.patient import Patient
-from clinic.patient_record import PatientRecord, Note
+from clinic.note import Note
+from clinic.patient_record import PatientRecord
 
 class TestPatient(unittest.TestCase):
     def setUp(self):
