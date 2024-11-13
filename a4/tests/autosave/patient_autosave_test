@@ -1,0 +1,50 @@
+import unittest
+import os
+import json
+from clinic.dao.patient_dao_json import PatientDAOJSON
+from clinic.patient import Patient
+
+class TestPatientDAOJSONAutosave(unittest.TestCase):
+    def setUp(self):
+        self.test_file = 'clinic/patients.json'
+        self.dao = PatientDAOJSON(autosave=True)
+        self.dao._patients = {}
+        if os.path.exists(self.test_file):
+            os.remove(self.test_file)
+
+    def tearDown(self):
+        if os.path.exists(self.test_file):
+            os.remove(self.test_file)
+
+    def test_create_patient_autosave(self):
+        self.dao.create_patient('123', 'John Doe', '1990-01-01', '555-5555', 'john@example.com', '123 Elm St')
+        self.assertTrue(os.path.exists(self.test_file))
+        with open(self.test_file, 'r') as file:
+            data = json.load(file)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]['phn'], '123')
+
+    def test_update_patient_autosave(self):
+        self.dao.create_patient('123', 'John Doe', '1990-01-01', '555-5555', 'john@example.com', '123 Elm St')
+        self.dao.update_patient('123', '123', 'John Smith', '1990-01-01', '555-5555', 'john@example.com', '123 Elm St')
+        with open(self.test_file, 'r') as file:
+            data = json.load(file)
+            self.assertEqual(data[0]['name'], 'John Smith')
+
+    def test_delete_patient_autosave(self):
+        self.dao.create_patient('123', 'John Doe', '1990-01-01', '555-5555', 'john@example.com', '123 Elm St')
+        self.dao.delete_patient('123')
+        with open(self.test_file, 'r') as file:
+            data = json.load(file)
+            self.assertEqual(len(data), 0)
+
+    def test_append_patient_autosave(self):
+        self.dao.create_patient('123', 'John Doe', '1990-01-01', '555-5555', 'john@example.com', '123 Elm St')
+        self.dao.append_patient(Patient('124', 'Jane Doe', '1991-01-01', '555-5556', 'jane@example.com', '124 Elm St'))
+        with open(self.test_file, 'r') as file:
+            data = json.load(file)
+            self.assertEqual(len(data), 2)
+            self.assertEqual(data[1]['phn'], '124')
+
+if __name__ == '__main__':
+    unittest.main()

@@ -9,7 +9,7 @@ import pickle
 class Controller: 
     def __init__(self, autosave = False):
         self.locked = True
-        self.patients = PatientDAOJSON() #list of patients in the controller.
+        self.patients = PatientDAOJSON(autosave=True) #list of patients in the controller.
         #user/password for login. consider changing the init function to take arguments to do a constructor here. 
         #NEW FUNCTIONALITY: multiple users. 
         self.users = {'user': '123456', 'ali': '@G00dPassw0rd'}
