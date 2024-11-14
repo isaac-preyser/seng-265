@@ -173,6 +173,17 @@ class IntegrationTest(TestCase):
 		retrieved_list = self.controller.retrieve_patients("Smith")
 		self.assertEqual(len(retrieved_list), 0)
 
+
+		# after creating patients, reset persistence to assure that persistence is working well
+		self.reset_persistence()
+
+		# retrieve one patient
+		retrieved_list = self.controller.retrieve_patients("Mary Doe")
+		self.assertEqual(len(retrieved_list), 1, "retrieved list of patients has size 1")
+		actual_patient = retrieved_list[0]
+		self.assertEqual(actual_patient, expected_patient_4, "retrieved patient in the list is Mary Doe")
+		
+
 	def test_update_patient(self):
 		# some patients that may be updated
 		expected_patient_1 = Patient(9798884444, "Ali Mesbah", "1980-03-03", "250 301 6060", "mesbah.ali@gmail.com", "500 Fairfield Rd, Victoria")
