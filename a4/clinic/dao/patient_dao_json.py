@@ -20,6 +20,15 @@ class PatientDAOJSON(PatientDAO):
             with open('clinic/patients.json', 'r') as file:
                 data = file.read()
                 self._patients = PatientDecoder().decode(data)
+                print(f'Loaded {len(self._patients)} patients.')
+                #we need to depickle the notes for each patient, and associate them with their respective patients.
+                #this is done via the NoteDAO object.
+                for patient in self._patients.values():
+                    print(f'Loading notes for {patient.name} - {patient.phn}')
+                    if not patient.record.noteDAO.load_notes():
+                        print(f'No notes loaded for {patient.name} - {patient.phn}')
+                    else:
+                        print(f'Loaded {len(patient.record.noteDAO)} notes for {patient.name} - {patient.phn}')
         except FileNotFoundError:
             self._patients = {}
 
@@ -28,7 +37,9 @@ class PatientDAOJSON(PatientDAO):
         with open('clinic/patients.json', 'w') as file:
             n = file.write(PatientEncoder().encode(self._patients))
             print(f'Wrote {n} bytes to file.')
-
+            for patient in self._patients.values():
+                print(f'Saving notes for {patient.name} - {patient.phn}')
+                patient.record.noteDAO.save_notes()
 
     def search_patient(self, phn) -> Patient:
         return self.get_patient(phn)

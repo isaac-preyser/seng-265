@@ -2,6 +2,8 @@ import json
 from clinic.patient import Patient
 
 class PatientDecoder:
+    
+    
     @staticmethod
     def decode(json_string) -> dict[int, Patient]:
         """

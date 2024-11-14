@@ -9,7 +9,7 @@ class Patient:
         self.phone = phone
         self.email = email
         self.address = address
-        self.record = PatientRecord()
+        self.record = PatientRecord(self.phn) #must pass phn to the record.
 
     def __eq__(self, other):
         return self.phn == other.phn and self.name == other.name and self.birth_date == other.birth_date and self.phone == other.phone and self.email == other.email and self.address == other.address and self.record == other.record
@@ -18,7 +18,7 @@ class Patient:
         return self.record.retrieve_notes(search_term)
     
     def get_note(self, code):
-        for note in self.record.notes:
+        for note in self.record.noteDAO:
             if note.code == code:
                 return note
         return None

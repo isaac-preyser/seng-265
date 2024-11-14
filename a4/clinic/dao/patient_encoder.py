@@ -2,7 +2,7 @@
 import json
 from clinic.patient import Patient
 from clinic.patient_record import PatientRecord
-from clinic.dao.note_dao_pickle import NoteDAO
+from clinic.dao.note_dao_pickle import NoteDAOPickle
 
 class PatientEncoder(json.JSONEncoder):
     """
@@ -14,7 +14,6 @@ class PatientEncoder(json.JSONEncoder):
             return o.__dict__
         if isinstance(o, PatientRecord):
             return o.__dict__
-        if isinstance(o, NoteDAO):
-            return o.__dict__
-        
+        if isinstance(o, NoteDAOPickle):
+            return o.notes #only encode the notes, not the other metadata. 
         return super().default(o)

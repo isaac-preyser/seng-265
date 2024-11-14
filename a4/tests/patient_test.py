@@ -20,7 +20,7 @@ class TestPatient(unittest.TestCase):
             code=code, text=text
         )
         self.patient.record.remove_note = lambda code: True
-        self.patient.record.notes.notes = {
+        self.patient.record.noteDAO.notes = {
             "001": Note(code="001", text="First note"),
             "002": Note(code="002", text="Second note")
         }

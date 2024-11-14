@@ -12,7 +12,7 @@ class Controller:
         self.patients = PatientDAOJSON(autosave=True) #list of patients in the controller.
         #user/password for login. consider changing the init function to take arguments to do a constructor here. 
         #NEW FUNCTIONALITY: multiple users. 
-        self.users = {'user': '123456', 'ali': '@G00dPassw0rd'}
+        self.users = {'user': self.get_password_hash('123456'), 'ali': self.get_password_hash('@G00dPassw0rd')}
         self.current_user = None
         self.current_patient = None #this is used to store the patient that is currently being worked on.
         #NEW FUNCTIONALITY: autosave
@@ -44,6 +44,7 @@ class Controller:
         if self.locked:
             print('You are already logged out.') #not sure if this is necessary
             raise exception.invalid_logout_exception.InvalidLogoutException('Invalid logout.')
+        self.current_user = None
         self.locked = True
         print('You have been logged out.')
         return True
