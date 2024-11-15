@@ -22,7 +22,7 @@ class PatientRecord:
         #create a note object, and add it to the list.
         note = self.noteDAO.create_note(self.auto_counter + 1, text)
         self.auto_counter += 1
-        print(f'Added note {note.code}: "{note.text}"')
+        # print(f'Added note {note.code}: "{note.text}"')
         return note
     
     #given a code, find and remove a note. 
@@ -43,8 +43,8 @@ class PatientRecord:
     def list_notes(self):
         #sort the notes by timestamp (recent first) and return them. Not sure if I can use dict.values() here.
         sorted_notes = sorted(self.noteDAO, key=lambda x: x.timestamp, reverse=True) #sort by timestamp, most recent first (via lambda function)
-        for note in sorted_notes:
-            print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
+        # for note in sorted_notes:
+        #     print(f'Note {note.code}: "{note.text}" Time: {note.timestamp}')
         return sorted_notes
     
     #search for a note with a given search term.

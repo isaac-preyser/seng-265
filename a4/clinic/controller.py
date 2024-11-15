@@ -42,35 +42,35 @@ class Controller:
 
     def logout(self) -> bool:
         if self.locked:
-            print('You are already logged out.') #not sure if this is necessary
+            # print('You are already logged out.') #not sure if this is necessary
             raise exception.invalid_logout_exception.InvalidLogoutException('Invalid logout.')
         self.current_user = None
         self.locked = True
-        print('You have been logged out.')
+        # print('You have been logged out.')
         return True
     
     def login(self, user, password) -> bool:
         if not self.locked:
-            print('You are already logged in.')
+            # print('You are already logged in.')
             raise exception.duplicate_login_exception.DuplicateLoginException('Duplicate login.')
         if user in self.users and self.users[user] == self.get_password_hash(password):
             self.locked = False
             self.current_user = user 
-            print('You have been logged in.')
+            # print('You have been logged in.')
             return True
-        print('Invalid password.')
+        # print('Invalid password.')
         raise exception.invalid_login_exception.InvalidLoginException('Invalid login - invalid password or username.')
     
     #generic function to check if the controller is locked.
     def check_login(self, action) -> bool:
         if self.locked:
-            print(f'You must be logged in to {action}.')
+            # print(f'You must be logged in to {action}.')
             raise exception.illegal_access_exception.IllegalAccessException(f'Illegal access. - {action}')
         return True
     
     def check_has_current_patient(self, action) -> bool:
         if not self.current_patient:
-            print(f'You must set a current patient to {action}.')
+            # print(f'You must set a current patient to {action}.')
             raise exception.no_current_patient_exception.NoCurrentPatientException(f'No current patient set. - {action}')
         return True
     
@@ -86,9 +86,9 @@ class Controller:
         self.check_login('search for a patient')
         for patient in self.patients:
             if patient.phn == phn:
-                print(f'Patient found: {patient.name} - {patient.phn}')
+                # print(f'Patient found: {patient.name} - {patient.phn}')
                 return patient
-        print('Patient not found.')
+        # print('Patient not found.')
         return None
     
     #this function returns a list of patients that have names that contain the supplied substring (search_term)
@@ -96,7 +96,7 @@ class Controller:
         self.check_login('retrieve patients')
         #delegate to the DAO to get the list of patients.
         results = self.patients.retrieve_patients(search_term)
-        print(f'{len(results)} patients found.')
+        # print(f'{len(results)} patients found.')
         return results
 
     #update a patient's information, given an existing PHN and new user information. 
@@ -105,12 +105,12 @@ class Controller:
         self.check_login('update a patient')
         #if there are no patients, there is nothing to update.
         if not self.patients:
-            print('No patients to update.')
+            # print('No patients to update.')
             raise exception.illegal_operation_exception.IllegalOperationException('No patients to update.')
         #if the current patient is the one being updated, we cannot update.
         #(if we have a current_patient, and the PHN is the same, we cannot update)
         if self.current_patient and self.current_patient.phn == phn:
-            print('Cannot update the current patient.')
+            # print('Cannot update the current patient.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - cannot update the current patient. (unset the current patient first)')
         #update the patient via the DAO.
         self.patients.update_patient(phn, new_phn, name, birth_date, phone, email, address)
@@ -125,10 +125,10 @@ class Controller:
     def delete_patient(self, phn) -> bool:
         self.check_login('delete a patient')
         if not self.patients:
-            print('No patients to delete.')
+            # print('No patients to delete.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - No patients to delete.')
         if self.current_patient and self.current_patient.phn == phn:
-            print('Cannot delete the current patient.')
+            # print('Cannot delete the current patient.')
             raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - cannot delete the current patient.')
         #immediately delegate to the DAO. 
         return self.patients.delete_patient(phn)
@@ -147,7 +147,7 @@ class Controller:
         if patient:
             self.current_patient = patient
             return True
-        print('Patient not found.')
+        # print('Patient not found.')
         raise exception.illegal_operation_exception.IllegalOperationException('Illegal operation - patient not found.')
 
     
@@ -171,9 +171,9 @@ class Controller:
         self.check_has_current_patient('search for a note')
         note = self.current_patient.get_note(code)
         if note:
-            print(f'Note found: "{note.text}" Time: {note.timestamp}')
+            # print(f'Note found: "{note.text}" Time: {note.timestamp}')
             return note
-        print(f'Note (with code {code}) not found.')
+        # print(f'Note (with code {code}) not found.')
         return None #intentional, do not throw an exception.
     
 
@@ -189,9 +189,9 @@ class Controller:
         self.check_has_current_patient('update a note')
         # Update the note via the patient.
         if self.current_patient.update_note(code, text):
-            print('Note updated.')
+            # print('Note updated.')
             return True
-        print('Note not found.')
+        # print('Note not found.')
         return False
     
     # Removes a note with a supplied code.
@@ -204,5 +204,5 @@ class Controller:
     def list_notes(self):
         self.check_login('list notes')
         self.check_has_current_patient('list notes')
-        print("Listing notes:")
+        # print("Listing notes:")
         return self.current_patient.list_notes()

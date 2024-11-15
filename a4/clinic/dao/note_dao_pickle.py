@@ -29,11 +29,11 @@ class NoteDAOPickle(NoteDAO):
         try:
             with open(f'clinic/records/{self.phn}.dat', 'rb') as file:
                 self.notes = pickle.load(file)
-                print(f'Loaded {len(self.notes)} notes.')
+                # print(f'Loaded {len(self.notes)} notes.')
                 number_of_notes = len(self.notes)
         except FileNotFoundError:
             self.notes = {}
-            print('No notes found.')
+            # print('No notes found.')
             number_of_notes = 0
         
         #set the auto_counter to the number of notes loaded.
@@ -50,7 +50,7 @@ class NoteDAOPickle(NoteDAO):
         #this function should be called after the patient_dao has saved the patient's record.
         with open(f'clinic/records/{self.phn}.dat', 'wb') as file:
             pickle.dump(self.notes, file)
-            print(f'Wrote {len(self.notes)} notes to file.')
+            # print(f'Wrote {len(self.notes)} notes to file.')
 
     
     #allow "list" functionality for the notes object.
