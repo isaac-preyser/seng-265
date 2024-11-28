@@ -15,6 +15,10 @@ from clinic.gui.main_gui import MainGUI
 class LoginGUI(QMainWindow):
 
     def __init__(self, controller):
+        
+        #Debug auto-login
+        auto_login = True
+
         super().__init__()
         self.controller = controller
         # Continue here with your code!
@@ -25,8 +29,6 @@ class LoginGUI(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        #set background color   
-        central_widget.setStyleSheet("background-color: #f0f0f0")
 
         self.message = QLabel("Welcome to the SENG265 Clinic!")
         self.message.setFont(QFont("Arial", 12))
@@ -71,15 +73,16 @@ class LoginGUI(QMainWindow):
         version_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         main_layout.addWidget(version_label)
 
+        if auto_login:
+            self.controller.login('user', '123456')
+            self.main_window = MainGUI(self.controller)
+            self.main_window.show()
+            self.close()
         
 
 
     def login(self, event):
-        # This method will be called when the user clicks the login button.
-        # It will check the username and password fields, and call login via the controller.
-        # If login is successful, the dialog will close, and the main application window will open.
-        # If login is unsuccessful, the message will be updated with "Login failed.", etc. 
-        
+
         #get the username and password entered by the user
         username = self.username_input.text()
         password = self.password_input.text()   
@@ -93,7 +96,7 @@ class LoginGUI(QMainWindow):
             self.main_window = MainGUI(self.controller)
             self.main_window.show()
 
-            self.hide()
+            self.close()
 
             
 

@@ -62,8 +62,9 @@ class PatientDAOJSON(PatientDAO):
 
     def retrieve_patients(self, search_string) -> list[Patient]:
         results = []
+        search_string_lower = search_string.lower()
         for patient in self._patients.values():
-            if search_string in patient.name:
+            if search_string_lower in patient.name.lower():
                 results.append(patient)
         return results
 

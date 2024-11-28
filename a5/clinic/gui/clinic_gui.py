@@ -15,7 +15,7 @@ class ClinicGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         # Continue here with your code!
-        
+                
 
 
 
@@ -24,8 +24,8 @@ def main():
     app = QApplication(sys.argv)
     #init the controller
     controller = Controller() 
-    window = LoginGUI(controller)
-    window.show()
+    login_window = LoginGUI(controller)
+    login_window.show()
     app.exec()
 
 if __name__ == '__main__':
