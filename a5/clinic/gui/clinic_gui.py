@@ -23,7 +23,7 @@ class ClinicGUI(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     #init the controller
-    controller = Controller() 
+    controller = Controller(autosave=True) 
     login_window = LoginGUI(controller)
     login_window.show()
     app.exec()

@@ -56,6 +56,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="toolTip">
+         <string>Search for a patient by name or PHN. </string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
@@ -192,6 +195,9 @@
                </widget>
               </item>
               <item>
+               <widget class="QTableWidget" name="tableWidget"/>
+              </item>
+              <item>
                <widget class="QPushButton" name="addNoteButton">
                 <property name="text">
                  <string>+ </string>
@@ -280,10 +286,23 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="patientDataTab">
        <attribute name="title">
-        <string>Page</string>
+        <string>Patient Data</string>
        </attribute>
+       <widget class="QPushButton" name="deletePatientButton">
+        <property name="geometry">
+         <rect>
+          <x>890</x>
+          <y>570</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Delete Patient ...</string>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
