@@ -3,30 +3,50 @@ import PyQt6.QtWidgets as QtWidgets
 import PyQt6.QtCore as QtCore
 import PyQt6.uic as uic
 from PyQt6.QtCore import Qt, QItemSelection, QItemSelectionModel
-from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 
 from clinic.controller import Controller
 
 class NoteTableModel(QtCore.QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
-        self._data = data   
-
+        self._data = data
+        
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
             # return the note code and text
-            return self._data[index.row()].code if index.column() == 0 else self._data[index.row()].text
+            if index.column() == 0:
+                return self._data[index.row()].code
+            elif index.column() == 1:
+                return str(self._data[index.row()].timestamp)
+            else: 
+                return None
+
+        
         
     def rowCount(self, index):
         # return the number of notes in the list. 
         return len(self._data)
     
     def columnCount(self, index):
-        # Note code, timestamp, and text. 
-        return 3 #might want to change to 2, and have the vert header data contain the note codes. 
+        # Note code, timestamp. 
+        return 2 #might want to change to 2, and have the vert header data contain the note codes. 
     
+    def headerData(self, section, orientation, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                if section == 0:
+                    return 'Code'
+                elif section == 1:
+                    return 'Timestamp'
+                else:
+                    return None
 
+            else:
+                return section
+        return None
 
+    
 
 
 class PatientTableModel(QtCore.QAbstractTableModel):
@@ -74,11 +94,22 @@ class MainGUI(QtWidgets.QMainWindow):
         self.patientsList = self.findChild(QtWidgets.QWidget, 'patientsList')
         # set the model for the patients list
         self.patientsList.setModel(PatientTableModel(self.controller.list_patients()))
+         # resize the columns to fit the data. 
+        self.patientsList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.patientsList.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+
         # whenever a row is selected, update the current patient
         self.patientsList.selectionModel().selectionChanged.connect(self.update_current_patient)
-        # when that row is selected, load the notes. 
-        self.notesList = self.findChild(QtWidgets.QTableView, 'notesList')
 
+
+        self.notesList = self.findChild(QtWidgets.QTableView, 'notesList')
+        self.notesList.setModel(NoteTableModel([]))
+        # when a patient row is selected, update the notes list. 
+        self.patientsList.selectionModel().selectionChanged.connect(self.update_notes_list)
+        # resize the columns to fit the data. 
+        self.notesList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+
+        
 
 
 
@@ -92,8 +123,13 @@ class MainGUI(QtWidgets.QMainWindow):
         self.addPatientButton.clicked.connect(self.new_patient)
 
 
+        # connect the notes search bar to the search_notes method
+        # when a note is selected, update the note text box.
 
+        # when a note is selected, update the note text box.
+        self.notesList.selectionModel().selectionChanged.connect(self.update_current_note)
 
+        # TODO: Fix the above connection; it is not working. 
 
 
 
@@ -115,8 +151,10 @@ class MainGUI(QtWidgets.QMainWindow):
             phn = self.patientsList.model().get_phn(selectedRow)
             print(f'PHN: {phn}')
             # set the current patient
-            self.controller.set_current_patient(phn)
-
+            if self.controller.set_current_patient(phn):
+                #print(f'Current patient set - {self.controller.current_patient}')
+                pass
+            
     def highlight_row(self, row):
         selectionModel = self.patientsList.selectionModel()
         selection = QItemSelection(self.patientsList.model().index(row, 0), self.patientsList.model().index(row, 1))
@@ -180,3 +218,27 @@ class MainGUI(QtWidgets.QMainWindow):
         # Update the patient list
         self.search_patient() # this will update the patient list with the new patient
 
+    def update_notes_list(self):
+        if self.controller.current_patient is None:
+            print('No current patient.')
+            return
+        # Get the current patient's notes
+        notes = self.controller.current_patient.list_notes()
+        # Update the notes list
+        self.notesList.setModel(NoteTableModel(notes))
+
+    def search_notes(self, text):
+        if self.controller.current_patient is None:
+            print('No current patient.')
+            return
+        # Get the current patient's notes
+        notes = self.controller.current_patient.retrieve_notes(text)
+        # Update the notes list
+        self.notesList.setModel(NoteTableModel(notes))
+
+    def update_current_note(self, newSelection):
+        print(f'Note selected: {newSelection.indexes()}')
+        if newSelection.indexes():
+            selectedRow = newSelection.indexes()[0].row()
+            self.noteContent = self.findChild(QtWidgets.QLabel, 'noteContent')
+            self.noteContent.setText(self.controller.current_patient.list_notes()[selectedRow].text)

@@ -204,5 +204,5 @@ class Controller:
     def list_notes(self):
         self.check_login('list notes')
         self.check_has_current_patient('list notes')
-        # print("Listing notes:")
+        print("Listing notes:")
         return self.current_patient.list_notes()
