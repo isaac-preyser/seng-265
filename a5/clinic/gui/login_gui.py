@@ -1,6 +1,15 @@
+import sys
+import os
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QFont
+
+
+# Add the parent directory of the clinic package to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from clinic.gui.main_gui import MainGUI
+
 
 
 class LoginGUI(QMainWindow):
@@ -79,8 +88,14 @@ class LoginGUI(QMainWindow):
         #check if the username and password are correct, via the controller.
         try: 
             self.controller.login(username, password)
-            #if the login is successful, close the login dialog.
-            self.close()
+            #if the login is successful, close the login dialog and open the main application window.
+
+            self.main_window = MainGUI(self.controller)
+            self.main_window.show()
+
+            self.hide()
+
+            
 
 
         except Exception as e:
