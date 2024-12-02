@@ -3,6 +3,7 @@ import PyQt6.QtWidgets as QtWidgets
 import PyQt6.QtCore as QtCore
 import PyQt6.uic as uic
 from PyQt6.QtCore import Qt, QItemSelection, QItemSelectionModel
+from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 
 from clinic.controller import Controller
@@ -16,9 +17,11 @@ class NoteTableModel(QtCore.QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             # return the note code and text
             if index.column() == 0:
-                return self._data[index.row()].code
+                # return the first 25 characters of the note text
+                return (self._data[index.row()].text[:25] + '...') if len(self._data[index.row()].text) > 50 else self._data[index.row()].text
             elif index.column() == 1:
-                return str(self._data[index.row()].timestamp)
+                #show the date and time, no seconds or below.
+                return str(self._data[index.row()].timestamp.strftime('%Y-%m-%d %H:%M'))
             else: 
                 return None
 
@@ -36,12 +39,13 @@ class NoteTableModel(QtCore.QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 if section == 0:
-                    return 'Code'
+                    return 'Text Preview'
                 elif section == 1:
                     return 'Timestamp'
                 else:
                     return None
-
+            if orientation == Qt.Orientation.Vertical:
+                return self._data[section].code
             else:
                 return section
         return None
@@ -103,16 +107,11 @@ class MainGUI(QtWidgets.QMainWindow):
 
 
         self.notesList = self.findChild(QtWidgets.QTableView, 'notesList')
-        self.notesList.setModel(NoteTableModel([]))
+        self.notesList.setModel(NoteTableModel([])) # use an empty list, and then update it when a patient is selected.
         # when a patient row is selected, update the notes list. 
         self.patientsList.selectionModel().selectionChanged.connect(self.update_notes_list)
         # resize the columns to fit the data. 
         self.notesList.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-
-        
-
-
-
 
         # connect the patientSearchBar to the search_patient method
         self.patientSearchBar = self.findChild(QtWidgets.QLineEdit, 'patientSearchBar')
@@ -122,17 +121,24 @@ class MainGUI(QtWidgets.QMainWindow):
         self.addPatientButton = self.findChild(QtWidgets.QPushButton, 'addPatientButton')
         self.addPatientButton.clicked.connect(self.new_patient)
 
-
-        # connect the notes search bar to the search_notes method
+        # connect the note search bar to the search_notes method
+        self.noteSearchBar = self.findChild(QtWidgets.QLineEdit, 'noteSearchBar')
+        self.noteSearchBar.textChanged.connect(self.search_notes)
         # when a note is selected, update the note text box.
+        self.notesList.selectionModel().selectionChanged.connect(self.display_selected_note)
+        #also change the preview text of updateNoteField to the selected note's text (for editing)
+        self.updateNoteField = self.findChild(QtWidgets.QPlainTextEdit, 'updateNoteField')
+        # when CTRL+Enter is pressed, update the note.
+        self.updateNoteShortcut = QShortcut(QKeySequence('Ctrl+Return'), self.updateNoteField)
+        self.updateNoteShortcut.activated.connect(self.update_note)
+        #this will be done in the display_selected_note method, we just needed to have a reference to the field (as acheived above.)
 
-        # when a note is selected, update the note text box.
-        self.notesList.selectionModel().selectionChanged.connect(self.update_current_note)
+        #connect the noteContent to the noteContent label
+        self.noteContent = self.findChild(QtWidgets.QLabel, 'noteContent')
 
-        # TODO: Fix the above connection; it is not working. 
-
-
-
+        #connect the updateNoteButton to the update_note method
+        self.updateNoteButton = self.findChild(QtWidgets.QPushButton, 'updateNoteButton')
+        self.updateNoteButton.clicked.connect(self.update_note)
 
         # show the main window
         self.show()
@@ -143,8 +149,6 @@ class MainGUI(QtWidgets.QMainWindow):
             selectedRow = newSelection.indexes()[0].row()
             print(f'Row {selectedRow} selected.')
 
-            #highlight the selected row
-            self.highlight_row(selectedRow)
 
 
             # get the PHN of the selected patient
@@ -154,13 +158,6 @@ class MainGUI(QtWidgets.QMainWindow):
             if self.controller.set_current_patient(phn):
                 #print(f'Current patient set - {self.controller.current_patient}')
                 pass
-            
-    def highlight_row(self, row):
-        selectionModel = self.patientsList.selectionModel()
-        selection = QItemSelection(self.patientsList.model().index(row, 0), self.patientsList.model().index(row, 1))
-        selectionModel.select(selection, QItemSelectionModel.SelectionFlag.Select)
-        self.patientsList.selectionModel().setCurrentIndex(self.patientsList.model().index(row, 0), QItemSelectionModel.SelectionFlag.SelectCurrent)
-
 
 
     def update_current_patient_info(self):
@@ -183,7 +180,7 @@ class MainGUI(QtWidgets.QMainWindow):
 
     def search_patient(self):
         # Accept text input from the search bar, filter the patient list.
-        search_term = self.patientSearchBar.text()
+        search_term = self.patientSearchBar.tex172t()
 
         # If the search term is numeric, search by PHN.
         if search_term.isnumeric():
@@ -226,19 +223,64 @@ class MainGUI(QtWidgets.QMainWindow):
         notes = self.controller.current_patient.list_notes()
         # Update the notes list
         self.notesList.setModel(NoteTableModel(notes))
+        # when a note is selected, update the note text box.
+        self.notesList.selectionModel().selectionChanged.connect(self.display_selected_note)
+
 
     def search_notes(self, text):
         if self.controller.current_patient is None:
             print('No current patient.')
             return
-        # Get the current patient's notes
-        notes = self.controller.current_patient.retrieve_notes(text)
+        
+        #if the search bar is numeric, search by note code
+        if text.isnumeric():
+            sub_code = int(text)
+            notes = []
+            for note in self.controller.current_patient.list_notes():
+                if self.contains_subinteger(note.code, sub_code):
+                    notes.append(note)
+            # if we find no notes, try to search by date. 
+            if len(notes) == 0:
+                for note in self.controller.current_patient.list_notes():
+                    if self.contains_subinteger(note.timestamp, sub_code):
+                        notes.append(note)
+        #otherwise, search by note text.
+        else:
+            text = text.strip()
+             # Get the current patient's notes
+            notes = self.controller.current_patient.retrieve_notes(text)
+
         # Update the notes list
         self.notesList.setModel(NoteTableModel(notes))
 
-    def update_current_note(self, newSelection):
+    def display_selected_note(self, newSelection):
         print(f'Note selected: {newSelection.indexes()}')
         if newSelection.indexes():
             selectedRow = newSelection.indexes()[0].row()
-            self.noteContent = self.findChild(QtWidgets.QLabel, 'noteContent')
             self.noteContent.setText(self.controller.current_patient.list_notes()[selectedRow].text)
+            self.updateNoteField.setPlainText(self.controller.current_patient.list_notes()[selectedRow].text)
+
+    def update_note(self):
+        # get the selected note
+        selectedRow = self.notesList.selectionModel().selectedRows()
+        if not selectedRow:
+            print('No note selected.')
+            self.statusBar().showMessage('No note selected. Please select a note to update.')
+            return
+        selectedRow = selectedRow[0].row()
+        note = self.controller.current_patient.list_notes()[selectedRow]
+        # get the new note text
+        new_text = self.updateNoteField.toPlainText()
+        # update the note
+        self.controller.update_note(note.code, new_text)
+        # update the notes list
+        self.update_notes_list()
+        # keep the current note selected. 
+        self.notesList.selectRow(selectedRow)
+
+        #update the note text box
+        self.noteContent.setText(new_text) #this is poor code practice. 
+
+        #show a notification that the note was updated in the status bar. 
+        self.statusBar().showMessage(f'Note {note.code} updated.')
+        

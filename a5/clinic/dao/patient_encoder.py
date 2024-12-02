@@ -16,7 +16,10 @@ class PatientEncoder(json.JSONEncoder):
         if isinstance(o, PatientRecord):
             return o.__dict__
         if isinstance(o, NoteDAOPickle):
-            return o.notes #only encode the notes, not the other metadata. 
+            return None # exclude NoteDAOPickle from the JSON encoding
         if isinstance(o, Note):
             return o.__dict__
+        #if the object is a datetime object, convert it to a string
+        if hasattr(o, 'isoformat'):
+            return o.isoformat()
         return super().default(o)
