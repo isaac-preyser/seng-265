@@ -135,10 +135,35 @@ class MainGUI(QtWidgets.QMainWindow):
 
         #connect the noteContent to the noteContent label
         self.noteContent = self.findChild(QtWidgets.QLabel, 'noteContent')
+        self.noteInfoBar = self.findChild(QtWidgets.QLabel, 'noteInfoBar')
+
+
 
         #connect the updateNoteButton to the update_note method
         self.updateNoteButton = self.findChild(QtWidgets.QPushButton, 'updateNoteButton')
         self.updateNoteButton.clicked.connect(self.update_note)
+
+
+        #populate the current patient info line edits
+        self.patientData_address = self.findChild(QtWidgets.QPlainTextEdit, 'plainTextEdit_address')
+        self.patientData_address.setPlainText('Select a patient to view their information.')
+
+
+        self.patientData_birth = self.findChild(QtWidgets.QLineEdit, 'lineEdit_birth')
+        
+        self.patientData_email = self.findChild(QtWidgets.QLineEdit, 'lineEdit_email')
+        
+        self.patientData_name = self.findChild(QtWidgets.QLineEdit, 'lineEdit_name')
+        
+        self.patientData_phone = self.findChild(QtWidgets.QLineEdit, 'lineEdit_phone')
+        
+        self.patientData_phn = self.findChild(QtWidgets.QLineEdit, 'lineEdit_phn')
+        
+        # populate the current patient buttonbox
+
+        self.patientData_buttons = self.findChild(QtWidgets.QDialogButtonBox, 'patientData_buttons')
+
+         
 
         # show the main window
         self.show()
@@ -147,22 +172,57 @@ class MainGUI(QtWidgets.QMainWindow):
         # get the selected row, if it is non-empty
         if newSelection.indexes():
             selectedRow = newSelection.indexes()[0].row()
-            print(f'Row {selectedRow} selected.')
-
-
+            # print(f'Row {selectedRow} selected.')
 
             # get the PHN of the selected patient
             phn = self.patientsList.model().get_phn(selectedRow)
-            print(f'PHN: {phn}')
+            # print(f'PHN: {phn}')
             # set the current patient
             if self.controller.set_current_patient(phn):
                 #print(f'Current patient set - {self.controller.current_patient}')
+                # update the current patient's information
+                self.update_current_patient_info()
                 pass
 
+        else:
+            # set the current patient to None. 
+            self.controller.current_patient = None
+            print('No patient selected - setting to None.')
+            self.update_current_patient_info()
+        
+        # update the notes list
+        self.update_notes_list()
+
+        #if there is a note currently selected, clear it.
+        self.noteContent.setText('')
+        self.updateNoteField.setPlainText('')
+        self.noteInfoBar.setText('Select a note to view or update.')
+        #clear the search bar
+        self.noteSearchBar.setText('')
+
+        #clear the notes list
+        self.notesList.setModel(NoteTableModel([]))
 
     def update_current_patient_info(self):
-        # on the second tab, update the current patient's information.
-        pass
+        if self.controller.current_patient is None:
+            self.patientData_phn.setText('')
+            self.patientData_name.setText('')
+            self.patientData_birth.setText('')
+            self.patientData_phone.setText('')
+            self.patientData_email.setText('')
+            self.patientData_address.setPlainText('Select a patient to view their information.')
+            return
+        
+        
+        self.patientData_phn.setText(str(self.controller.current_patient.phn))
+        self.patientData_name.setText(self.controller.current_patient.name)
+        self.patientData_birth.setText(self.controller.current_patient.birth_date)
+        self.patientData_phone.setText(self.controller.current_patient.phone)
+        self.patientData_email.setText(self.controller.current_patient.email)
+        self.patientData_address.setPlainText(self.controller.current_patient.address)
+
+
+
 
     def contains_subinteger(self, main_int, sub_int):
         #helper for searching by PHN
@@ -180,7 +240,7 @@ class MainGUI(QtWidgets.QMainWindow):
 
     def search_patient(self):
         # Accept text input from the search bar, filter the patient list.
-        search_term = self.patientSearchBar.tex172t()
+        search_term = self.patientSearchBar.text()
 
         # If the search term is numeric, search by PHN.
         if search_term.isnumeric():
@@ -250,7 +310,7 @@ class MainGUI(QtWidgets.QMainWindow):
              # Get the current patient's notes
             notes = self.controller.current_patient.retrieve_notes(text)
 
-        # Update the notes list
+        # Update the notes list 
         self.notesList.setModel(NoteTableModel(notes))
 
     def display_selected_note(self, newSelection):
@@ -259,6 +319,12 @@ class MainGUI(QtWidgets.QMainWindow):
             selectedRow = newSelection.indexes()[0].row()
             self.noteContent.setText(self.controller.current_patient.list_notes()[selectedRow].text)
             self.updateNoteField.setPlainText(self.controller.current_patient.list_notes()[selectedRow].text)
+            self.noteInfoBar.setText(f'[{self.controller.current_patient.name}] Note {self.controller.current_patient.list_notes()[selectedRow].code} - {self.controller.current_patient.list_notes()[selectedRow].timestamp.strftime("%Y-%m-%d %H:%M")}')    
+        else:
+            self.noteContent.setText('')
+            self.updateNoteField.setPlainText('')
+            self.noteInfoBar.setText('Select a note to view or update.')
+
 
     def update_note(self):
         # get the selected note
@@ -280,6 +346,7 @@ class MainGUI(QtWidgets.QMainWindow):
 
         #update the note text box
         self.noteContent.setText(new_text) #this is poor code practice. 
+
 
         #show a notification that the note was updated in the status bar. 
         self.statusBar().showMessage(f'Note {note.code} updated.')
