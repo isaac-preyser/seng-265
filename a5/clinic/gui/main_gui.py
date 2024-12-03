@@ -163,10 +163,161 @@ class MainGUI(QtWidgets.QMainWindow):
 
         self.patientData_buttons = self.findChild(QtWidgets.QDialogButtonBox, 'patientData_buttons')
 
-         
+        # connect the buttons to the appropriate methods. 
+
+        #reset the current patient's information
+        self.patientData_buttons.button(QtWidgets.QDialogButtonBox.StandardButton.Reset).clicked.connect(self.update_current_patient_info)
+
+        #save the current patient's information, based on the data in the line edits.
+        self.patientData_buttons.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(self.save_current_patient_info)
+
+        #connect the discard button to the delete_patient method
+        self.patientData_buttons.button(QtWidgets.QDialogButtonBox.StandardButton.Discard).clicked.connect(self.delete_patient)
+        #connect the "-" button to the delete_patient method
+        self.deletePatientButton = self.findChild(QtWidgets.QPushButton, 'deletePatientButton')
+        if not self.deletePatientButton:
+            print('Delete patient button not found.')
+        self.deletePatientButton.clicked.connect(self.delete_patient)
+
+
+        #connect the addNoteButton to the add_note method
+        self.addNoteButton = self.findChild(QtWidgets.QPushButton, 'addNoteButton')
+        self.addNoteButton.clicked.connect(self.add_note)
+
+        #connect the deleteNoteButton to the delete_note method
+        self.deleteNoteButton = self.findChild(QtWidgets.QPushButton, 'deleteNoteButton')
+        self.deleteNoteButton.clicked.connect(self.delete_note)
+
+        #connect the logout_button to the logout method
+        self.logout_button = self.findChild(QtWidgets.QPushButton, 'logout_button')
+        self.logout_button.clicked.connect(self.controller.logout)
+
 
         # show the main window
         self.show()
+
+
+
+    def logout(self):
+        #open a dialog box to confirm the logout
+        dialog = QtWidgets.QMessageBox()
+        dialog.setWindowTitle('Logout')
+        dialog.setText('Are you sure you want to logout?')
+        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        dialog.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        response = dialog.exec()
+    
+        if response == QtWidgets.QMessageBox.StandardButton.Yes:
+            #logout
+            self.controller.logout()
+            self.main_window.close()
+            
+
+        else:
+            #show a notification that the logout was cancelled in the status bar. 
+            self.statusBar().showMessage('Logout cancelled')
+                                         
+
+
+
+        
+
+    
+    def add_note(self):
+        if self.controller.current_patient is None:
+            self.statusBar().showMessage('No patient selected. Please select a patient to add a note.')
+            return
+        #show a dialog box to get the note text
+        dialog = QtWidgets.QInputDialog()
+        dialog.setWindowTitle('Add Note')
+        dialog.setLabelText('Enter the note text:')
+        dialog.setOkButtonText('Add Note')
+        dialog.setCancelButtonText('Cancel')
+        response = dialog.exec()
+        if response == QtWidgets.QDialog.DialogCode.Accepted:
+            note_text = dialog.textValue()
+            #add the note to the current patient
+            self.controller.create_note(note_text)
+            #update the notes list
+            self.update_notes_list()
+            #show a notification that the note was added in the status bar. 
+            self.statusBar().showMessage(f'Note added to {self.controller.current_patient.name}.')
+        else:
+            #show a notification that the addition was cancelled in the status bar. 
+            self.statusBar().showMessage('Note addition cancelled')
+
+    def delete_patient(self):
+        if self.controller.current_patient is None:
+            self.statusBar().showMessage('No patient selected. Please select a patient to delete.')
+            return
+    
+        #show a dialog box to confirm the deletion of the patient.
+        dialog = QtWidgets.QMessageBox()
+        dialog.setWindowTitle('Delete Patient')
+        dialog.setText(f'Are you sure you want to delete {self.controller.current_patient.name}?')
+        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        dialog.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        response = dialog.exec()
+
+        patient_name = self.controller.current_patient.name
+        phn = self.controller.current_patient.phn
+
+        #if the user confirms the deletion, delete the patient.
+        if response == QtWidgets.QMessageBox.StandardButton.Yes:
+            #unset the current patient
+            phn_to_delete = self.controller.current_patient.phn
+            self.controller.current_patient = None
+            if self.controller.delete_patient(phn_to_delete):
+                #show a notification that the patient was deleted in the status bar. 
+                self.statusBar().showMessage(f'Patient {patient_name} [{phn}] deleted.')
+                #update the patient list
+                self.update_patient_list(self.controller.list_patients())
+                #clear the current patient's information
+                self.controller.current_patient = None
+                self.update_current_patient_info()
+                #clear the notes list
+                self.notesList.setModel(NoteTableModel([]))
+                #clear the note text box
+                self.noteContent.setText('')
+                self.updateNoteField.setPlainText('')
+                self.noteInfoBar.setText('Select a note to view or update.')
+                #clear the search bar
+                self.noteSearchBar.setText('')
+        else: 
+            #show a notification that the deletion was cancelled in the status bar. 
+            self.statusBar().showMessage('Deletion cancelled')
+
+        
+
+    def save_current_patient_info(self):
+        # get the current patient's information from the line edits
+        old_phn = self.controller.current_patient.phn
+        new_phn = self.patientData_phn.text().strip()
+        name = self.patientData_name.text().strip()
+        birth_date = self.patientData_birth.text().strip()
+        phone = self.patientData_phone.text().strip()
+        email = self.patientData_email.text().strip()
+        address = self.patientData_address.toPlainText().strip()
+
+        #unset the current patient
+        self.controller.current_patient = None
+
+        # update the current patient's information
+        self.controller.update_patient(old_phn, new_phn, name, birth_date, phone, email, address)
+        
+        #set the current patient to the updated patient
+        self.controller.set_current_patient(new_phn)
+        
+        # update the patient list
+        self.update_patient_list(self.controller.list_patients())
+
+
+        # update the current patient's information
+        self.update_current_patient_info()
+        # show a notification that the patient was updated in the status bar. 
+        self.statusBar().showMessage(f'Patient {name} updated.')
+
+        return    
 
     def update_current_patient(self, newSelection):
         # get the selected row, if it is non-empty
@@ -221,9 +372,6 @@ class MainGUI(QtWidgets.QMainWindow):
         self.patientData_email.setText(self.controller.current_patient.email)
         self.patientData_address.setPlainText(self.controller.current_patient.address)
 
-
-
-
     def contains_subinteger(self, main_int, sub_int):
         #helper for searching by PHN
         return str(sub_int) in str(main_int)
@@ -256,7 +404,6 @@ class MainGUI(QtWidgets.QMainWindow):
 
         # Update the patient list
         self.update_patient_list(patient_list)
-
 
     def new_patient(self):
         # Create a new patient
@@ -325,6 +472,42 @@ class MainGUI(QtWidgets.QMainWindow):
             self.updateNoteField.setPlainText('')
             self.noteInfoBar.setText('Select a note to view or update.')
 
+    def delete_note(self):
+        
+        
+        # get the selected note
+        selectedRow = self.notesList.selectionModel().selectedRows()
+        if not selectedRow:
+            print('No note selected.')
+            self.statusBar().showMessage('No note selected. Please select a note to delete.')
+            return
+        selectedRow = selectedRow[0].row()
+        note = self.controller.current_patient.list_notes()[selectedRow]
+
+        #display a dialog box to confirm the deletion of the note.
+        dialog = QtWidgets.QMessageBox()
+        dialog.setWindowTitle('Delete Note')
+        dialog.setText(f'Are you sure you want to delete Note {note.code}?')
+        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        dialog.setDefaultButton(QtWidgets.QMessageBox.StandardButton.No)
+        response = dialog.exec()
+
+        #if the user confirms the deletion, delete the note.
+        if response == QtWidgets.QMessageBox.StandardButton.Yes:            
+            # delete the note
+            self.controller.delete_note(note.code)
+            # update the notes list
+            self.update_notes_list()
+            # clear the note text box
+            self.noteContent.setText('')
+            self.updateNoteField.setPlainText('')
+            self.noteInfoBar.setText('Select a note to view or update.')
+            # show a notification that the note was deleted in the status bar. 
+            self.statusBar().showMessage(f'Note {note.code} deleted.')
+
+        else:
+            #show a notification that the deletion was cancelled in the status bar. 
+            self.statusBar().showMessage('Deletion cancelled')
 
     def update_note(self):
         # get the selected note

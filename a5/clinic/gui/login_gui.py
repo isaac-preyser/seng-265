@@ -17,7 +17,7 @@ class LoginGUI(QMainWindow):
     def __init__(self, controller):
         
         #Debug auto-login
-        auto_login = True
+        auto_login = False
 
         super().__init__()
         self.controller = controller
@@ -77,6 +77,7 @@ class LoginGUI(QMainWindow):
             self.controller.login('user', '123456')
             self.main_window = MainGUI(self.controller)
             self.main_window.show()
+            print(self)
             self.close()
         
 
