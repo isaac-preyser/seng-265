@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 
 from clinic.controller import Controller
 
+
 class NoteTableModel(QtCore.QAbstractTableModel):
     def __init__(self, data):
         super().__init__()
@@ -18,7 +19,7 @@ class NoteTableModel(QtCore.QAbstractTableModel):
             # return the note code and text
             if index.column() == 0:
                 # return the first 25 characters of the note text
-                return (self._data[index.row()].text[:25] + '...') if len(self._data[index.row()].text) > 50 else self._data[index.row()].text
+                return (self._data[index.row()].text[:25] + '...') if len(self._data[index.row()].text) > 25 else self._data[index.row()].text
             elif index.column() == 1:
                 #show the date and time, no seconds or below.
                 return str(self._data[index.row()].timestamp.strftime('%Y-%m-%d %H:%M'))
@@ -190,13 +191,44 @@ class MainGUI(QtWidgets.QMainWindow):
 
         #connect the logout_button to the logout method
         self.logout_button = self.findChild(QtWidgets.QPushButton, 'logout_button')
-        self.logout_button.clicked.connect(self.controller.logout)
+        self.logout_button.clicked.connect(self.logout)
 
-
+        #connect the list_PR_button to the list_PR method
+        self.list_PR_button = self.findChild(QtWidgets.QPushButton, 'list_PR_button')
+        if not self.list_PR_button:
+            print('List PR button not found.')
+        self.list_PR_button.clicked.connect(self.list_patient_records)
         # show the main window
         self.show()
 
+    def list_all_patients(self):
+        str = ''
+        for patient in self.controller.list_patients():
+            str += f'{patient.name} [{patient.phn}]\n'
+            str += f'Birth Date: {patient.birth_date}\n'
+            str += f'Phone: {patient.phone}\n'
+            str += f'Email: {patient.email}\n'
+            str += f'Address: {patient.address}\n\n'
+        if len(self.controller.list_patients()) == 0:
+            return 'No patients registered in the clinic.'
 
+        return str
+
+    def list_patient_records(self):
+        #open a dialog box to show the patient records
+        dialog = QtWidgets.QMessageBox()
+        dialog.setWindowTitle('Patient Records')
+        dialog.setText('Patient Records')
+        dialog.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        dialog.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
+        dialog.setDetailedText(self.list_all_patients())
+        #make the dialog box bigger
+        dialog.setMinimumWidth(800)
+
+        #set the size policy to expanding
+        dialog.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+
+        dialog.exec()
 
     def logout(self):
         #open a dialog box to confirm the logout
@@ -209,20 +241,20 @@ class MainGUI(QtWidgets.QMainWindow):
     
         if response == QtWidgets.QMessageBox.StandardButton.Yes:
             #logout
+            self.statusBar().showMessage('Logging out...')
             self.controller.logout()
-            self.main_window.close()
+            self.close()
+            from clinic.gui.login_gui import LoginGUI
+            #open the login dialog
+            self.login_dialog = LoginGUI(self.controller)
+            self.login_dialog.show()
             
+
 
         else:
             #show a notification that the logout was cancelled in the status bar. 
             self.statusBar().showMessage('Logout cancelled')
                                          
-
-
-
-        
-
-    
     def add_note(self):
         if self.controller.current_patient is None:
             self.statusBar().showMessage('No patient selected. Please select a patient to add a note.')
@@ -286,8 +318,6 @@ class MainGUI(QtWidgets.QMainWindow):
         else: 
             #show a notification that the deletion was cancelled in the status bar. 
             self.statusBar().showMessage('Deletion cancelled')
-
-        
 
     def save_current_patient_info(self):
         # get the current patient's information from the line edits
@@ -433,7 +463,6 @@ class MainGUI(QtWidgets.QMainWindow):
         # when a note is selected, update the note text box.
         self.notesList.selectionModel().selectionChanged.connect(self.display_selected_note)
 
-
     def search_notes(self, text):
         if self.controller.current_patient is None:
             print('No current patient.')
@@ -459,6 +488,7 @@ class MainGUI(QtWidgets.QMainWindow):
 
         # Update the notes list 
         self.notesList.setModel(NoteTableModel(notes))
+        self.notesList.selectionModel().selectionChanged.connect(self.display_selected_note)
 
     def display_selected_note(self, newSelection):
         print(f'Note selected: {newSelection.indexes()}')

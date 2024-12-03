@@ -135,6 +135,9 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a patient. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>+</string>
           </property>
@@ -172,6 +175,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove the currently selected patient. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>-</string>
           </property>
@@ -188,6 +194,9 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="currentIndex">
        <number>2</number>
@@ -250,9 +259,6 @@
                 <property name="toolTip">
                  <string>Search for a note in the active patient's record.</string>
                 </property>
-                <property name="toolTipDuration">
-                 <number>1</number>
-                </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
@@ -305,6 +311,12 @@
                <layout class="QHBoxLayout" name="horizontalLayout_4">
                 <item>
                  <widget class="QPushButton" name="addNoteButton">
+                  <property name="acceptDrops">
+                   <bool>false</bool>
+                  </property>
+                  <property name="toolTip">
+                   <string>Open the note creation dialog. </string>
+                  </property>
                   <property name="text">
                    <string>+ </string>
                   </property>
@@ -413,9 +425,6 @@
                   <property name="toolTip">
                    <string>CTRL+Enter</string>
                   </property>
-                  <property name="toolTipDuration">
-                   <number>300</number>
-                  </property>
                   <property name="text">
                    <string>Update Note</string>
                   </property>
@@ -450,6 +459,9 @@
       <widget class="QWidget" name="patientDataTab">
        <attribute name="title">
         <string>Patient Data</string>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Read and manage patient data in this tab.</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -621,6 +633,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Reset:&lt;/span&gt;	Revert any changes in the text boxes to the stored values. &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Save:&lt;/span&gt; 	Save any changes in the text boxes to the database. &lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Discard:&lt;/span&gt; 	Delete current patient. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="standardButtons">
                <set>QDialogButtonBox::Discard|QDialogButtonBox::Reset|QDialogButtonBox::Save</set>
               </property>
@@ -670,6 +685,9 @@
        <attribute name="title">
         <string>System</string>
        </attribute>
+       <attribute name="toolTip">
+        <string>Find extraneous functions in this tab.</string>
+       </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QPushButton" name="logout_button">
@@ -680,6 +698,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="list_PR_button">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a dialog listing all patients. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>List Patient Record</string>
           </property>
