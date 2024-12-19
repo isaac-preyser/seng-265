@@ -8,10 +8,8 @@
 #define MAX_LIKERT_AMOUNT 6 // 6 likert options. 
 #define MAX_CATEGORY_AMOUNT 5 // 5 categories- C, I, G, U, P.
 
-//I'm going to attempt this project using dynamic memory allocation.
-//In retrospect, I should have used static memory allocation for a lot more things, as it would have a) been easier to manage, and b) been more efficient.
-//Essentially, I challenged myself in an attempt to master malloc(), but I ultimately discovered that it was not the best choice, 
-//and that malloc is ridiculously difficult to manage, and that it's slow!
+//I'm going to attempt this project using (mostly) dynamic memory allocation.
+
 typedef struct {
     char* question_content; 
     char question_type; // C, I, G, U, or P
